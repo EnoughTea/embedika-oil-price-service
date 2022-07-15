@@ -1,9 +1,10 @@
-package com.embedika.ops
+package com.embedika.ops.utils
 
 import java.util.concurrent.{Executors, ForkJoinPool}
 
 import scala.concurrent.ExecutionContext
 
+import com.embedika.ops.{CpuExecutionContext, IoExecutionContext}
 import org.scalatest.*
 import org.scalatest.concurrent.*
 import org.scalatest.flatspec.*

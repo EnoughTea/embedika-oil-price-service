@@ -1,10 +1,15 @@
 package com.embedika.ops
 
+import com.embedika.ops.utils.*
+
+
 class DataGovRuOilPricesTests extends UnitSpec:
   "A DataGovRuOilPrices" should "fetch prices from test sources" in {
     val provider = makePriceProvider()
 
-    whenReady(provider.fetchCurrent()) { prices =>
+    val fetchCurrentPrices = provider.fetchCurrent()
+
+    whenReady(fetchCurrentPrices) { prices =>
       prices.length shouldEqual 111
     }
   }

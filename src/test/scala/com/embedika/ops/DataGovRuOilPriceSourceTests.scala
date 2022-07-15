@@ -1,19 +1,15 @@
 package com.embedika.ops
 
-import java.util.concurrent.Executors
-
-import scala.concurrent.*
-import scala.concurrent.duration.*
-
-import org.scalatest.*
-import org.scalatest.time.*
+import com.embedika.ops.utils.*
 
 
 final class DataGovRuOilPriceSourceTests extends UnitSpec:
   "An DataGovRuOilPriceSource" should "have a valid local price source" in {
     val priceSource = makePriceSource()
 
-    whenReady(priceSource.local()) { prices =>
+    val fetchLocalPrices = priceSource.local()
+
+    whenReady(fetchLocalPrices) { prices =>
       prices.ready() shouldBe true
     }
   }
@@ -21,7 +17,9 @@ final class DataGovRuOilPriceSourceTests extends UnitSpec:
   it should "have a valid remote price source" in {
     val priceSource = makePriceSource()
 
-    whenReady(priceSource.remote()) { prices =>
+    val fetchRemotePrices = priceSource.local()
+
+    whenReady(fetchRemotePrices) { prices =>
       prices.ready() shouldBe true
     }
   }

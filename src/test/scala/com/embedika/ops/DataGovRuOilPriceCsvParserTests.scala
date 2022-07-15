@@ -3,10 +3,9 @@ package com.embedika.ops
 import java.io.InputStreamReader
 import java.time.LocalDate
 
-import scala.util.{Try, Using}
+import scala.util.Using
 
-import org.scalatest.*
-import org.scalatest.time.*
+import com.embedika.ops.utils.UnitSpec
 import squants.market.{Money, MoneyContext, RUB}
 
 
@@ -26,9 +25,13 @@ final class DataGovRuOilPriceCsvParserTests extends UnitSpec with DataGovRuOilPr
 
     val records = parsed.success.value
     records.head shouldEqual OilPriceRecord(
-      DateRange(LocalDate.parse("2013-03-15"), LocalDate.parse("2013-04-14")), Money(764.6, RUB))
+      DateRange(LocalDate.parse("2013-03-15"), LocalDate.parse("2013-04-14")),
+      Money(764.6, RUB)
+    )
     records.last shouldEqual OilPriceRecord(
-      DateRange(LocalDate.parse("2022-05-15"), LocalDate.parse("2022-06-14")), Money(638.7, RUB))
+      DateRange(LocalDate.parse("2022-05-15"), LocalDate.parse("2022-06-14")),
+      Money(638.7, RUB)
+    )
   }
 
   def testCsv: InputStreamReader =

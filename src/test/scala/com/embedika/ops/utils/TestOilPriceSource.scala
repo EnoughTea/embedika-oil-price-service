@@ -1,9 +1,10 @@
-package com.embedika.ops
+package com.embedika.ops.utils
 
 import java.io.InputStreamReader
-import java.net.URI
 
 import scala.concurrent.Future
+
+import com.embedika.ops.{IoExecutionContext, OilPriceSource}
 
 
 /** Reads prices from JAR .csv resource. */
