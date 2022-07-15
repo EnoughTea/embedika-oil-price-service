@@ -30,7 +30,11 @@ trait OilPriceProvider:
 final class DataGovRuOilPrices(val httpClient: HttpClient, val sources: OilPriceSource)
     extends OilPriceProvider
     with DataGovRuOilPriceCsvParser:
-  val id: String = "Data.gov.ru"
+  def id: String = DataGovRuOilPrices.id
 
   override def fetchCurrent()(using blockingEc: IoExecutionContext): Future[Vector[OilPriceRecord]] =
     fetchingStrategy() flatMap { contents => Future.fromTry(parseCsv(contents) map (_ sortBy (_.dateRange.start))) }
+    
+object DataGovRuOilPrices {
+  val id: String = "Data.gov.ru"
+}
