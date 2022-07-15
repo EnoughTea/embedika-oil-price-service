@@ -1,12 +1,18 @@
 package com.embedika.ops
 
 import java.io.InputStreamReader
+import java.text.{DecimalFormat, DecimalFormatSymbols}
+import java.time.LocalDate
+import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
+import java.util.Locale
 import java.util.stream.Stream
 
 import scala.jdk.CollectionConverters.*
 import scala.util.{Try, Using}
 
 import de.siegmar.fastcsv.reader.{CsvReader, CsvRow}
+import squants.market.{Money, MoneyContext, RUB}
 
 
 /** Trait for something capable of converting an input stream of CSV with oil prices into a typed representation. */
@@ -34,4 +40,39 @@ trait OilPriceCsvParser:
 
 /** Parses CSV with oil prices from data.gov.ru */
 trait DataGovRuOilPriceCsvParser extends OilPriceCsvParser:
-  override protected def parseRow(csvRow: CsvRow): Try[OilPriceRecord] = ???
+  private val monthValueToNameMap = Map[java.lang.Long, String](
+    (1, "янв"),
+    (2, "фев"),
+    (3, "мар"),
+    (4, "апр"),
+    (5, "май"),
+    (6, "июн"),
+    (7, "июл"),
+    (8, "авг"),
+    (9, "сен"),
+    (10, "окт"),
+    (11, "ноя"),
+    (12, "дек")
+  ).asJava
+
+  private val formatter = DateTimeFormatterBuilder()
+    .appendPattern("dd.")
+    .appendText(ChronoField.MONTH_OF_YEAR, monthValueToNameMap)
+    .appendPattern(".yy")
+    .toFormatter
+
+  private val decimalSymbols = new DecimalFormatSymbols(new Locale("ru"))
+  private val decimalFormat  = new DecimalFormat("#,###.#", decimalSymbols)
+  decimalFormat.setParseBigDecimal(true)
+
+  override protected def parseRow(csvRow: CsvRow): Try[OilPriceRecord] = Try {
+    val startDateRaw = csvRow.getField(0)
+    val endDateRaw   = csvRow.getField(1)
+    val priceRaw     = csvRow.getField(2)
+    val startDate    = LocalDate.from(formatter.parse(startDateRaw))
+    val endDate      = LocalDate.from(formatter.parse(endDateRaw))
+    val price        = decimalFormat.parse(priceRaw).asInstanceOf[java.math.BigDecimal]
+    OilPriceRecord(DateRange(startDate, endDate), Money(price))
+  }
+
+  private given mc: MoneyContext = MoneyContext(RUB, Set(RUB), Seq.empty, false)
