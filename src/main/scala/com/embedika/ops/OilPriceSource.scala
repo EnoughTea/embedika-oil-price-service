@@ -22,19 +22,19 @@ trait OilPriceSource:
 
 
 /** Provides CSV stream readers for data.gov.ru oil prices. */
-final class DataGovRuOilPriceSource(httpClient: HttpClient) extends OilPriceSource:
+final class DataGovRuOilPriceSource(appSettings: AppSettings, httpClient: HttpClient) extends OilPriceSource:
   /** Fetches oil prices from a JAR resource. Not a good idea for a real service, but good enough for our purposes. */
   override def local()(using ec: IoExecutionContext): Future[InputStreamReader] = Future {
     scala.io.Source.fromResource("data-20220617T1317-structure-20210419T0745.csv").reader()
   }
 
   override def remote()(using ec: IoExecutionContext): Future[InputStreamReader] =
-    val futureDocBytes = httpClient.get(URI("https://data.gov.ru/opendata/7710349494-urals")) // TODO: link to config
+    val futureDocBytes = httpClient.get(appSettings.dataGovRu.oilPageLink)
     futureDocBytes flatMap { bytes =>
       val browser = JsoupBrowser()
       val doc     = browser.parseInputStream(bytes)
       val maybeUtf8CsvLink: Option[String] =
-        (doc >?> element("div.download:nth-child(3) > a:nth-child(1)")) map (_.attr("href"))
+        (doc >?> element(appSettings.dataGovRu.oilPageCsvLinkQuery)) map (_.attr("href"))
       maybeUtf8CsvLink map { csvLink =>
         httpClient.get(URI.create(csvLink)) map (new InputStreamReader(_))
       } getOrElse Future.failed(
