@@ -5,6 +5,7 @@ object Dependencies {
   val configVersion         = "1.4.2"
   val csvParserVersion      = "2.1.0"
   val logbackClassicVersion = "1.2.11"
+  val scaffeineVersion      = "5.2.0"
   val scalaLoggingVersion   = "3.9.5"
   val scalaScraperVersion   = "3.0.0"
   val scalatestVersion      = "3.2.12"
@@ -14,6 +15,7 @@ object Dependencies {
   val config         = "com.typesafe"                   % "config"          % configVersion
   val csvParser      = "de.siegmar"                     % "fastcsv"         % csvParserVersion
   val logbackClassic = "ch.qos.logback"                 % "logback-classic" % logbackClassicVersion
+  val scaffeine      = "com.github.blemale"            %% "scaffeine"       % scaffeineVersion % Compile
   val scalaLogging   = "com.typesafe.scala-logging"    %% "scala-logging"   % scalaLoggingVersion
   val scalaScraper   = "net.ruippeixotog"              %% "scala-scraper"   % scalaScraperVersion
   val scalatest      = "org.scalatest"                 %% "scalatest"       % scalatestVersion
@@ -27,6 +29,7 @@ object Dependencies {
   val opsDeps = Seq(
     config,
     csvParser,
+    scaffeine,
     scalaScraper,
     squants,
     sttp
