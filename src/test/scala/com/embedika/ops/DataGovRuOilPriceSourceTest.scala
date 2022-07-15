@@ -24,9 +24,10 @@ class DataGovRuOilPriceSourceTest extends UnitSpec:
   it should "have a valid remote price source" in {
     val priceSource = makePriceSource()
 
-    whenReady(priceSource.local()) { prices =>
+    whenReady(priceSource.remote()) { prices =>
       prices.ready() shouldBe true
     }
   }
 
-  def makePriceSource(): DataGovRuOilPriceSource = new DataGovRuOilPriceSource()
+  def makePriceSource(): DataGovRuOilPriceSource =
+    new DataGovRuOilPriceSource(new TestHttpClient())
