@@ -9,10 +9,7 @@ import org.scalatest.*
 import org.scalatest.time.*
 
 
-class DataGovRuOilPriceSourceTest extends UnitSpec:
-  given defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(2, Seconds), interval = Span(5, Millis))
-  given ioEc: IoExecutionContext = IoExecutionContext(ExecutionContext.fromExecutor(Executors.newFixedThreadPool(8)))
-
+final class DataGovRuOilPriceSourceTests extends UnitSpec:
   "An DataGovRuOilPriceSource" should "have a valid local price source" in {
     val priceSource = makePriceSource()
 
