@@ -1,7 +1,6 @@
 package com.embedika.ops
 
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 import scala.collection.Searching.{Found, InsertionPoint}
 import scala.concurrent.Future
@@ -10,64 +9,112 @@ import scala.language.postfixOps
 import squants.market.{Money, RUB}
 
 
-/** Public contract for oil price-related operations. */
-trait OilPriceServiceContract:
-  /** Retrieves all oil price records from the provider with the given id.
-    *
-    * @param providerId Provider id.
-    * @return All oil price records, or empty vector if no oil price records exist for given provider.
-    */
-  def allRecords(providerId: String): Future[Vector[OilPriceRecord]]
-
-  /** Finds average oil price for the specified date range with the given oil price provider.
-    *
-    * @param targetRange Date range to calculate average price for,
-    *                    should at least intersect dates in records.
-    * @param providerId Provider id.
-    * @return Calculated average oil price, or None of given range was completely outside the range of all oil records.
-    */
-  def priceInDateRange(targetRange: DateRange, providerId: String)(using
-      ec: CpuExecutionContext
-  ): Future[Option[Money]]
-
-  /** Finds minimum and maximum average oil prices for the specified date with the given oil price provider.
-    *
-    * @param targetRange Date range to search for minimum and maximum prices,
-    *                    should at least intersect dates in records.
-    * @param providerId Provider id.
-    * @return Found min and max prices, or None of given range was completely outside the range of all oil records.
-    */
-  def minMaxPricesInDateRange(targetRange: DateRange, providerId: String)(using
-      ec: CpuExecutionContext
-  ): Future[Option[(Money, Money)]]
-
-  /** Finds average oil price at the specified date with the given oil price provider.
-    *
-    * @param targetDate Date for an oil price record should be found.
-    * @param providerId Provider id.
-    * @return Found oil price or None.
-    */
-  def priceAtDate(targetDate: LocalDate, providerId: String)(using
-      ec: CpuExecutionContext
-  ): Future[Option[Money]]
-
-
 /** Contains business logic for various oil price-related operations.
   *
   * Assumes priceCache.get stores oil price records sorted by start date
   * due to [[OilPriceProvider.fetchCurrent]] guarantees.
   */
-final class OilPriceService(priceCache: OilPriceCache) extends OilPriceServiceContract:
+final class OilPriceService(priceCache: OilPriceCache) extends OilPriceServiceContract with OilPriceRecordSearchHelper:
   override def allRecords(providerId: String): Future[Vector[OilPriceRecord]] = priceCache.get(providerId)
 
   override def priceInDateRange(targetRange: DateRange, providerId: String)(using
       ec: CpuExecutionContext
-  ): Future[Option[Money]] = ???
+  ): Future[Option[Money]] =
+    findRecordsForDateRangeFromProvider(targetRange, providerId) map {
+      case Vector()       => None
+      case Vector(single) => Some(single.price)
+      case relatedRecords @ Vector(first, rest*) =>
+        val startDate = first.dateRange.clamp(targetRange.start)
+        val endDate   = rest.last.dateRange.clamp(targetRange.end)
+        // Calculate price periods: a price and amount of days said price is held:
+        val pricePeriods = relatedRecords.zipWithIndex map { case (record, index) =>
+          // Handle first and last periods separately, since they could contain any amount of days:
+          val participatingDays =
+            if index == 0 then DateRange(startDate, record.dateRange.end).daysCount
+            else if index == relatedRecords.length - 1 then DateRange(record.dateRange.start, endDate).daysCount
+            else record.dateRange.daysCount
+          (record.price, participatingDays)
+        }
+        // Now we just need to calculate (<period price> * <days in period>) / <total days in all periods>
+        val (sum, totalDays) = pricePeriods.foldLeft((Money(0, RUB), 0L)) {
+          case (acc, (priceForPeriod, daysInPeriod)) =>
+            (acc._1 + (priceForPeriod * daysInPeriod.toDouble), acc._2 + daysInPeriod)
+        }
+        Some(sum / totalDays.toDouble)
+    }
 
   override def minMaxPricesInDateRange(targetRange: DateRange, providerId: String)(using
       ec: CpuExecutionContext
-  ): Future[Option[(Money, Money)]] = ???
+  ): Future[Option[(Money, Money)]] =
+    findRecordsForDateRangeFromProvider(targetRange, providerId) map {
+      case Vector()       => None
+      case Vector(single) => Some((single.price, single.price))
+      case relatedRecords =>
+        val initial = (relatedRecords.head.price, relatedRecords.head.price)
+        val minMax = relatedRecords.foldLeft(initial) { case ((min, max), record) =>
+          (if record.price < min then record.price else min, if record.price > max then record.price else max)
+        }
+        Some(minMax)
+    }
+
+  /** Same as [[findRecordsForDateRange]], but fetches prices from price provider.
+    *
+    * @return Found oil price records and their indices, sorted by date range start,
+    *         or an empty vector if targetRange does not intersect with any record.
+    */
+  private def findRecordsForDateRangeFromProvider(targetRange: DateRange, providerId: String)(using
+      ec: CpuExecutionContext
+  ): Future[Vector[OilPriceRecord]] =
+    priceCache.get(providerId) map { findRecordsForDateRange(targetRange, _) }
 
   override def priceAtDate(targetDate: LocalDate, providerId: String)(using
       ec: CpuExecutionContext
-  ): Future[Option[Money]] = ???
+  ): Future[Option[Money]] =
+    priceCache.get(providerId) map { prices => findRecordForDate(targetDate, prices).map(_._1.price) }
+
+
+/** Contains a few helper methods to search for oil price records more conveniently. */
+trait OilPriceRecordSearchHelper:
+  private type OilPriceRecordWithIndex = (OilPriceRecord, Int)
+
+  /** Finds oil price records whose date ranges intersects with given target range.
+    *
+    * @param targetRange Date range for which intersecting oil price records should be found.
+    * @param prices Vector of oil price records, sorted by date range start.
+    * @return Found oil price records and their indices, sorted by date range start,
+    *         or an empty vector if targetRange does not intersect with any record.
+    */
+  protected def findRecordsForDateRange(
+      targetRange: DateRange,
+      prices: Vector[OilPriceRecord]
+  ): Vector[OilPriceRecord] =
+    ((findRecordForDate(targetRange.start, prices), findRecordForDate(targetRange.end, prices)) match {
+      case (Some(start), Some(end)) => Some(start._2 to end._2)           // Given range is completely known
+      case (Some(start), None)      => Some(start._2 until prices.length) // Given range goes too far into future...
+      case (None, Some(end))        => Some(0 to end._2)                  // Given range goes to far into past...
+      case _ => None // Given range is completely disjointed with known date ranges
+    }) map { affectedRange => affectedRange map { i => prices(i) } toVector } getOrElse Vector.empty
+
+  /** Finds oil price record whose date range includes given targetDate.
+    *
+    * @param targetDate Date for which oil price record should be found.
+    * @param prices Vector of oil price records, sorted by date range start.
+    * @return Found oil price record and its index, or None if no such record exists.
+    */
+  protected def findRecordForDate(
+      targetDate: LocalDate,
+      prices: Vector[OilPriceRecord]
+  ): Option[OilPriceRecordWithIndex] =
+    // search() is a binary search, so its result can tell us where the targetDate is relative to overall date range:
+    prices.search(OilPriceRecord(DateRange(targetDate, targetDate), Money(0, RUB))) match {
+      // Oil price record exists exactly for targetDate.
+      case Found(foundIndex) => Some(prices(foundIndex) -> foundIndex)
+      // targetDate is earlier than any record, so no record for us.
+      case InsertionPoint(insertionPoint) if insertionPoint == 0 => None
+      // targetDate either belongs to the last record's date range or is more into the future than any record.
+      case InsertionPoint(insertionPoint) if insertionPoint == prices.length =>
+        val lastRecord = prices(insertionPoint - 1)
+        if lastRecord.dateRange.contains(targetDate) then Some((lastRecord, insertionPoint - 1)) else None
+      // targetDate is in the date range of the record at insertionPoint - 1
+      case InsertionPoint(insertionPoint) => Some((prices(insertionPoint - 1), insertionPoint - 1))
+    }
