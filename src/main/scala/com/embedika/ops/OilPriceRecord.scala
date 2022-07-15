@@ -3,6 +3,8 @@ package com.embedika.ops
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
+import scala.util.Try
+
 import squants.Money
 
 
@@ -12,6 +14,18 @@ final case class DateRange(start: LocalDate, end: LocalDate) extends Ordered[Dat
   override def compare(that: DateRange): Int = start.compareTo(that.start)
 
   override def toString: String = s"[$start, $end]"
+
+
+object DateRange:
+  /** Parses ISO local date text such as "2007-12-03" into a date range of a single day. */
+  def parse(singleDate: String): Try[DateRange] = Try {
+    DateRange(LocalDate.parse(singleDate), LocalDate.parse(singleDate))
+  }
+
+  /** Parses ISO local date text such as "2007-12-03" for start and end dates into a date range. */
+  def parse(start: String, end: String): Try[DateRange] = Try {
+    DateRange(LocalDate.parse(start), LocalDate.parse(end))
+  }
 
 
 /** Represents a single oil price record, consisting of average oil price in the given date range. */

@@ -25,11 +25,11 @@ final class DataGovRuOilPriceCsvParserTests extends UnitSpec with DataGovRuOilPr
 
     val records = parsed.success.value
     records.head shouldEqual OilPriceRecord(
-      DateRange(LocalDate.parse("2013-03-15"), LocalDate.parse("2013-04-14")),
+      DateRange.parse("2013-03-15", "2013-04-14").get,
       Money(764.6, RUB)
     )
     records.last shouldEqual OilPriceRecord(
-      DateRange(LocalDate.parse("2022-05-15"), LocalDate.parse("2022-06-14")),
+      DateRange.parse("2022-05-15", "2022-06-14").get,
       Money(638.7, RUB)
     )
   }
