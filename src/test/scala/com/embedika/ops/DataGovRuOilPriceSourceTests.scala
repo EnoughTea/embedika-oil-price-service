@@ -27,4 +27,4 @@ final class DataGovRuOilPriceSourceTests extends UnitSpec:
   }
 
   def makePriceSource(): DataGovRuOilPriceSource =
-    new DataGovRuOilPriceSource(new TestHttpClient())
+    DataGovRuOilPriceSource(TestHttpClient())
