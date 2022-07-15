@@ -5,6 +5,7 @@ import java.net.URI
 
 import scala.concurrent.Future
 
+import com.typesafe.scalalogging.StrictLogging
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.dsl.DSL.*
 import net.ruippeixotog.scalascraper.dsl.DSL.Extract.*
@@ -22,13 +23,18 @@ trait OilPriceSource:
 
 
 /** Provides CSV stream readers for data.gov.ru oil prices. */
-final class DataGovRuOilPriceSource(appSettings: AppSettings, httpClient: HttpClient) extends OilPriceSource:
+final class DataGovRuOilPriceSource(appSettings: AppSettings, httpClient: HttpClient)
+    extends OilPriceSource
+    with StrictLogging:
   /** Fetches oil prices from a JAR resource. Not a good idea for a real service, but good enough for our purposes. */
   override def local()(using ec: IoExecutionContext): Future[InputStreamReader] = Future {
-    scala.io.Source.fromResource("data-20220617T1317-structure-20210419T0745.csv").reader()
+    val localResource = "data-20220617T1317-structure-20210419T0745.csv"
+    logger.trace(s"Data.gov.ru price source is sourcing local oil prices from $localResource")
+    scala.io.Source.fromResource(localResource).reader()
   }
 
   override def remote()(using ec: IoExecutionContext): Future[InputStreamReader] =
+    logger.trace(s"Data.gov.ru price source is sourcing remote oil prices from ${appSettings.dataGovRu.oilPageLink}")
     val futureDocBytes = httpClient.get(appSettings.dataGovRu.oilPageLink)
     futureDocBytes flatMap { bytes =>
       val browser = JsoupBrowser()

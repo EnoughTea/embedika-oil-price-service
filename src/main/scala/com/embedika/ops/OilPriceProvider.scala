@@ -5,6 +5,8 @@ import java.io.InputStreamReader
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
+import com.typesafe.scalalogging.StrictLogging
+
 
 /** Used for something capable of providing current oil prices via some fetching strategy. */
 trait OilPriceProvider:
@@ -29,12 +31,15 @@ trait OilPriceProvider:
 /** Provides current oil prices from Data.gov.ru or, failing that, from local JAR resource. */
 final class DataGovRuOilPrices(val httpClient: HttpClient, val sources: OilPriceSource)
     extends OilPriceProvider
-    with DataGovRuOilPriceCsvParser:
+    with DataGovRuOilPriceCsvParser
+    with StrictLogging:
   def id: String = DataGovRuOilPrices.id
 
   override def fetchCurrent()(using blockingEc: IoExecutionContext): Future[Vector[OilPriceRecord]] =
+    logger.trace(s"Data.gov.ru oil price provider is fetching current prices")
     fetchingStrategy() flatMap { contents => Future.fromTry(parseCsv(contents) map (_ sortBy (_.dateRange.start))) }
-    
+
+
 object DataGovRuOilPrices {
   val id: String = "Data.gov.ru"
 }

@@ -13,17 +13,20 @@ import scala.util.{Try, Using}
 
 import de.siegmar.fastcsv.reader.{CsvReader, CsvRow}
 import squants.market.{Money, MoneyContext, RUB}
-
+import com.typesafe.scalalogging.StrictLogging
 
 /** Trait for something capable of converting an input stream of CSV with oil prices into a typed representation. */
-trait OilPriceCsvParser:
+trait OilPriceCsvParser extends StrictLogging:
   /** Parses an input stream of CSV with oil prices into a vector of [[OilPriceRecord]]. */
   def parseCsv(csvContents: InputStreamReader): Try[Vector[OilPriceRecord]] =
+    logger.trace("Parsing CSV from input stream")
     buildCsvReader(csvContents) flatMap {
       Using(_) { csvReader =>
         val rowsOrFirstFailure = Try(getRows(csvReader) map { parseRow(_).get })
         rowsOrFirstFailure map { rows =>
-          rows.iterator().asScala.toVector
+          val parsedRecords = rows.iterator().asScala.toVector
+          logger.trace(s"Parsed CSV from input stream, total records: ${parsedRecords.length}")
+          parsedRecords
         }
       }.flatten
     }

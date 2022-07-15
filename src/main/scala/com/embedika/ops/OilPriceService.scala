@@ -6,6 +6,7 @@ import scala.collection.Searching.{Found, InsertionPoint}
 import scala.concurrent.Future
 import scala.language.postfixOps
 
+import com.typesafe.scalalogging.StrictLogging
 import squants.market.{Money, RUB}
 
 
@@ -14,12 +15,16 @@ import squants.market.{Money, RUB}
   * Assumes priceCache.get stores oil price records sorted by start date
   * due to [[OilPriceProvider.fetchCurrent]] guarantees.
   */
-final class OilPriceService(priceCache: OilPriceCache) extends OilPriceServiceContract with OilPriceRecordSearchHelper:
+final class OilPriceService(priceCache: OilPriceCache)
+    extends OilPriceServiceContract
+    with OilPriceRecordSearchHelper
+    with StrictLogging:
   override def allRecords(providerId: String): Future[Vector[OilPriceRecord]] = priceCache.get(providerId)
 
   override def priceInDateRange(targetRange: DateRange, providerId: String)(using
       ec: CpuExecutionContext
   ): Future[Option[Money]] =
+    logger.trace(s"Finding average price in range $targetRange for $providerId")
     findRecordsForDateRangeFromProvider(targetRange, providerId) map {
       case Vector()       => None
       case Vector(single) => Some(single.price)
@@ -41,20 +46,9 @@ final class OilPriceService(priceCache: OilPriceCache) extends OilPriceServiceCo
             (acc._1 + (priceForPeriod * daysInPeriod.toDouble), acc._2 + daysInPeriod)
         }
         Some(sum / totalDays.toDouble)
-    }
-
-  override def minMaxPricesInDateRange(targetRange: DateRange, providerId: String)(using
-      ec: CpuExecutionContext
-  ): Future[Option[(Money, Money)]] =
-    findRecordsForDateRangeFromProvider(targetRange, providerId) map {
-      case Vector()       => None
-      case Vector(single) => Some((single.price, single.price))
-      case relatedRecords =>
-        val initial = (relatedRecords.head.price, relatedRecords.head.price)
-        val minMax = relatedRecords.foldLeft(initial) { case ((min, max), record) =>
-          (if record.price < min then record.price else min, if record.price > max then record.price else max)
-        }
-        Some(minMax)
+    } map { foundPrice =>
+      logger.trace(s"Found average price in range $targetRange for $providerId: $foundPrice")
+      foundPrice
     }
 
   /** Same as [[findRecordsForDateRange]], but fetches prices from price provider.
@@ -67,10 +61,34 @@ final class OilPriceService(priceCache: OilPriceCache) extends OilPriceServiceCo
   ): Future[Vector[OilPriceRecord]] =
     priceCache.get(providerId) map { findRecordsForDateRange(targetRange, _) }
 
+  override def minMaxPricesInDateRange(targetRange: DateRange, providerId: String)(using
+      ec: CpuExecutionContext
+  ): Future[Option[(Money, Money)]] =
+    logger.trace(s"Finding min&max prices in range $targetRange for $providerId")
+    findRecordsForDateRangeFromProvider(targetRange, providerId) map {
+      case Vector()       => None
+      case Vector(single) => Some((single.price, single.price))
+      case relatedRecords =>
+        val initial = (relatedRecords.head.price, relatedRecords.head.price)
+        val minMax = relatedRecords.foldLeft(initial) { case ((min, max), record) =>
+          (if record.price < min then record.price else min, if record.price > max then record.price else max)
+        }
+        Some(minMax)
+    } map { foundPrices =>
+      logger.trace(s"Min&max prices in range $targetRange for $providerId: $foundPrices")
+      foundPrices
+    }
+
   override def priceAtDate(targetDate: LocalDate, providerId: String)(using
       ec: CpuExecutionContext
   ): Future[Option[Money]] =
-    priceCache.get(providerId) map { prices => findRecordForDate(targetDate, prices).map(_._1.price) }
+    logger.trace(s"Finding price at a date $targetDate for $providerId")
+    priceCache.get(providerId) map { prices =>
+      findRecordForDate(targetDate, prices).map(_._1.price)
+    } map { foundPrice =>
+      logger.trace(s"Found price at a date $targetDate for $providerId: $foundPrice")
+    foundPrice
+    }
 
 
 /** Contains a few helper methods to search for oil price records more conveniently. */

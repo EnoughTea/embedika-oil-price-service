@@ -7,6 +7,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.*
 import scala.language.postfixOps
 
+import com.typesafe.scalalogging.StrictLogging
 import sttp.client3.*
 import sttp.model.Uri
 
@@ -19,11 +20,12 @@ trait HttpClient extends AutoCloseable:
 /** Performs a simple HTTP GET request for an optional task of downloading fresh oil prices. Uses STTP because akka-http
   * does not support request timeouts out of the box atm: https://github.com/akka/akka-http/issues/42
   */
-final class BasicHttpClient(using ec: IoExecutionContext) extends HttpClient:
+final class BasicHttpClient(using ec: IoExecutionContext) extends HttpClient with StrictLogging:
   private val backend = HttpClientFutureBackend()
 
   /** Fires a single HttpRequest to the given URI, returns response body as an InputStream. */
   def get(uri: URI, timeout: FiniteDuration = 5 seconds): Future[InputStream] =
+    logger.trace(s"Sending GET request to $uri with timeout $timeout")
     val request = basicRequest.get(Uri(uri)).readTimeout(timeout)
     request.send(backend) flatMap { response =>
       response.body fold (

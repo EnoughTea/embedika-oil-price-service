@@ -1,0 +1,32 @@
+<configuration scan="true" scanPeriod="15 seconds">
+
+    <property name="LOG_DIR" value="/var/log/embedika/oil-price-service"/>
+    <property name="LOG_FILE" value="server"/>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${LOG_FILE}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level %logger{0} - %msg%n</pattern>
+            </layout>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} [%thread] [req-id: %X{req-id}] %-5level %logger{0}:%L - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="FILE" />
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>
