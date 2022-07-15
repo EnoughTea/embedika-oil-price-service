@@ -1,6 +1,4 @@
 package com.embedika.ops
 
-@main
-def main(): Unit = {
+object Main extends App:
   println("Hello world!")
-}
