@@ -1,11 +1,12 @@
 package com.embedika.ops
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
+import scala.concurrent.duration.*
 import scala.io.StdIn
-import scala.util.{Try, Using}
+import scala.language.postfixOps
+import scala.util.Try
 import scala.util.control.NonFatal
 
-import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.*
 
 
@@ -15,9 +16,11 @@ object Main extends App with SystemEnvironment with OilPriceServiceRoutes with H
   val httpClient             = new BasicHttpClient()(ioEc)
   val dataGovRuPriceProvider = new DataGovRuOilPrices(new DataGovRuOilPriceSource(settings, httpClient))
   val oilPriceProviders      = Seq(dataGovRuPriceProvider)
-  val service                = new OilPriceService(new OilPriceCache(oilPriceProviders)(ioEc))
+  val oilPriceCache          = new OilPriceCache(oilPriceProviders, 1 hour)(ioEc)
+  val service                = new OilPriceService(oilPriceCache)
 
   Try {
+    oilPriceCache.preload()
     val http = Http()
       .newServerAt(settings.host, settings.port)
       .bindFlow(routes)
