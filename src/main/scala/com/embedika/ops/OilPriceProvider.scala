@@ -11,7 +11,7 @@ import com.typesafe.scalalogging.StrictLogging
 /** Used for something capable of providing current oil prices via some fetching strategy. */
 trait OilPriceProvider {
 
-  /** Provider name, should be unique. */
+  /** Provider name, should be unique and case-insensitive. */
   def id: String
 
   /** Price sources. */
