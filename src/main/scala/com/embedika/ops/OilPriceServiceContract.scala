@@ -17,6 +17,9 @@ trait OilPriceServiceContract {
     */
   def allRecords(providerId: String): Future[Vector[OilPriceRecord]]
 
+  /** Returns provider instance if provider with given name exists within the service; None otherwise. */
+  def getProvider(providerId: String): Future[Option[OilPriceProvider]]
+
   /** Finds average oil price for the specified date range with the given oil price provider.
     *
     * @param targetRange Date range to calculate average price for,

@@ -24,6 +24,8 @@ final class OilPriceCache(providers: Seq[OilPriceProvider], ttl: FiniteDuration 
 
   def get(providerId: String): Future[Vector[OilPriceRecord]] = cache.get(normalize(providerId))
 
+  def getProvider(providerId: String): Option[OilPriceProvider] = providersMap.get(normalize(providerId))
+
   private def currentPricesFromProvider(providerId: String): Future[Vector[OilPriceRecord]] =
     providersMap.get(normalize(providerId)) map (_.fetchCurrent()) getOrElse Future.failed(
       new RuntimeException(s"Provider with name $providerId cannot be found")

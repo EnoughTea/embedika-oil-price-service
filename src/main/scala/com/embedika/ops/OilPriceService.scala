@@ -21,6 +21,10 @@ final class OilPriceService(priceCache: OilPriceCache)
     with StrictLogging {
   override def allRecords(providerId: String): Future[Vector[OilPriceRecord]] = priceCache.get(providerId)
 
+  override def getProvider(providerId: String): Future[Option[OilPriceProvider]] = Future {
+    priceCache.getProvider(providerId)
+  }
+
   override def priceInDateRange(targetRange: DateRange, providerId: String)(implicit
       ec: CpuExecutionContext
   ): Future[Option[Money]] = {
@@ -52,16 +56,6 @@ final class OilPriceService(priceCache: OilPriceCache)
     }
   }
 
-  /** Same as [[findRecordsForDateRange]], but fetches prices from price provider.
-    *
-    * @return Found oil price records and their indices, sorted by date range start,
-    *         or an empty vector if targetRange does not intersect with any record.
-    */
-  private def findRecordsForDateRangeFromProvider(targetRange: DateRange, providerId: String)(implicit
-      ec: CpuExecutionContext
-  ): Future[Vector[OilPriceRecord]] =
-    priceCache.get(providerId) map { findRecordsForDateRange(targetRange, _) }
-
   override def minMaxPricesInDateRange(targetRange: DateRange, providerId: String)(implicit
       ec: CpuExecutionContext
   ): Future[Option[(Money, Money)]] = {
@@ -92,6 +86,17 @@ final class OilPriceService(priceCache: OilPriceCache)
       foundPrice
     }
   }
+
+  /** Same as [[findRecordsForDateRange]], but fetches prices from price provider.
+    *
+    * @return Found oil price records and their indices, sorted by date range start,
+    *         or an empty vector if targetRange does not intersect with any record.
+    */
+  private def findRecordsForDateRangeFromProvider(targetRange: DateRange, providerId: String)(implicit
+      ec: CpuExecutionContext
+  ): Future[Vector[OilPriceRecord]] =
+    priceCache.get(providerId) map { findRecordsForDateRange(targetRange, _) }
+
 }
 
 
