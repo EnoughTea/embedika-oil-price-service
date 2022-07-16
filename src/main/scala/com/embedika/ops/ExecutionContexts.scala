@@ -2,6 +2,7 @@ package com.embedika.ops
 
 import scala.concurrent.ExecutionContext
 
+
 /** Base trait for context marks. */
 trait ExectionContextBase extends ExecutionContext {
   def underlying: ExecutionContext
@@ -11,8 +12,8 @@ trait ExectionContextBase extends ExecutionContext {
   override def reportFailure(cause: Throwable): Unit = underlying.reportFailure(cause)
 }
 
-/** Simple wrapper used to mark an execution context used for CPU-bound operations. */
+/** Simple wrapper used to mark an execution context as used for CPU-bound operations. */
 final class CpuExecutionContext(val underlying: ExecutionContext) extends ExectionContextBase
 
-/** Simple wrapper used to mark an execution context used for IO-bound operations. */
+/** Simple wrapper used to mark an execution context as used for IO-bound operations. */
 final class IoExecutionContext(val underlying: ExecutionContext) extends ExectionContextBase

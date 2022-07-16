@@ -18,8 +18,9 @@ trait HttpClient extends AutoCloseable {
 }
 
 
-/** Performs a simple HTTP GET request for an optional task of downloading fresh oil prices. Uses STTP because akka-http
-  * does not support request timeouts out of the box atm: https://github.com/akka/akka-http/issues/42
+/** Performs a simple HTTP GET request for an optional task of downloading fresh oil prices.
+  * Uses STTP (https://sttp.softwaremill.com/en/latest/) mostly because akka-http client is too limited,
+  * it does not even support request timeouts out of the box atm: https://github.com/akka/akka-http/issues/42
   */
 final class BasicHttpClient(implicit ec: IoExecutionContext) extends HttpClient with StrictLogging {
   private val backend = HttpClientFutureBackend()

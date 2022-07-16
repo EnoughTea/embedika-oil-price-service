@@ -28,7 +28,9 @@ trait OilPriceCache {
 }
 
 
-/** Caches provider's current oil prices for a given time. */
+/** Caches provider's current oil prices for a given time using a thin Scala wrapper for Caffeine
+  * (https://github.com/ben-manes/caffeine).
+  */
 final class ScaffeineOilPriceCache(providers: Seq[OilPriceProvider], ttl: FiniteDuration = 1 hour)(implicit
     ioEc: IoExecutionContext
 ) extends OilPriceCache {

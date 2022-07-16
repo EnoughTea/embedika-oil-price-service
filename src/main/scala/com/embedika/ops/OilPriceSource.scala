@@ -22,7 +22,7 @@ trait OilPriceSource {
 }
 
 
-/** Provides CSV stream readers for data.gov.ru oil prices. */
+/** Provides stream readers with CSV document containing data.gov.ru oil prices. */
 final class DataGovRuOilPriceSource(appSettings: AppSettings, httpClient: HttpClient)
     extends OilPriceSource
     with StrictLogging {

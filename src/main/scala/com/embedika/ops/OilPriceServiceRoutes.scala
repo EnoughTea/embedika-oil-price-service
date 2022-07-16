@@ -19,6 +19,7 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
 
   implicit def cpuEc: CpuExecutionContext
 
+  // Poor man's replacement for Swagger:
   private val helloMessage: String =
     Seq(
       "Welcome to the oil price service. Try one of the following routes:",

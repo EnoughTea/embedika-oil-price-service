@@ -11,6 +11,16 @@ import io.circe.generic.semiauto.*
 import squants.market.*
 
 
+/** Represents a single oil price record, consisting of average oil price in the given date range. */
+final case class OilPriceRecord(dates: DateRange, price: Money) extends Ordered[OilPriceRecord] {
+
+  /** Compares this record's range start to another record's range start, from earliest to latest. */
+  override def compare(that: OilPriceRecord): Int = dates.compare(that.dates)
+
+  override def toString: String = s"$price $dates"
+}
+
+
 /** Represents an inclusive date range, from [[start]] to [[end]]. */
 final case class DateRange(start: LocalDate, end: LocalDate) extends Ordered[DateRange] {
 
@@ -48,16 +58,6 @@ object DateRange {
   def parse(start: String, end: String): Try[DateRange] = Try {
     DateRange(LocalDate.parse(start), LocalDate.parse(end))
   }
-}
-
-
-/** Represents a single oil price record, consisting of average oil price in the given date range. */
-final case class OilPriceRecord(dates: DateRange, price: Money) extends Ordered[OilPriceRecord] {
-
-  /** Compares this record's range start to another record's range start, from earliest to latest. */
-  override def compare(that: OilPriceRecord): Int = dates.compare(that.dates)
-
-  override def toString: String = s"$price $dates"
 }
 
 
