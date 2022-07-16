@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.StrictLogging
 
 
 /** Used for something capable of providing current oil prices via some fetching strategy. */
-trait OilPriceProvider {
+trait OilPriceProvider extends StrictLogging {
 
   /** Provider name, should be unique and case-insensitive. */
   def id: String
@@ -26,15 +26,17 @@ trait OilPriceProvider {
   override def toString: String = s"$id (oil price provider)"
 
   protected def fetchingStrategy()(implicit blockingEc: IoExecutionContext): Future[InputStreamReader] =
-    sources.remote() recoverWith { case NonFatal(_) => sources.local() }
+    sources.remote() recoverWith { case NonFatal(e) =>
+      logger.trace(s"Oil price provider is falling to local source due to remote being unavailable: ${e.getMessage}")
+      sources.local()
+    }
 }
 
 
 /** Provides current oil prices from Data.gov.ru or, failing that, from local JAR resource. */
 final class DataGovRuOilPrices(val sources: OilPriceSource)
     extends OilPriceProvider
-    with DataGovRuOilPriceCsvParser
-    with StrictLogging {
+    with DataGovRuOilPriceCsvParser {
   def id: String = DataGovRuOilPrices.id
 
   override def fetchCurrent()(implicit
