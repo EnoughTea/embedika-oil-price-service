@@ -4,6 +4,7 @@ import java.io.InputStreamReader
 import java.net.URI
 
 import scala.concurrent.Future
+import scala.io.Codec
 
 import com.typesafe.scalalogging.StrictLogging
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
@@ -31,7 +32,7 @@ final class DataGovRuOilPriceSource(appSettings: AppSettings, httpClient: HttpCl
   override def local()(implicit ec: IoExecutionContext): Future[InputStreamReader] = Future {
     val localResource = "data-20220617T1317-structure-20210419T0745.csv"
     logger.trace(s"Data.gov.ru price source is sourcing local oil prices from $localResource")
-    scala.io.Source.fromResource(localResource).reader()
+    scala.io.Source.fromResource(localResource)(Codec.UTF8).reader()
   }
 
   override def remote()(implicit ec: IoExecutionContext): Future[InputStreamReader] = {
