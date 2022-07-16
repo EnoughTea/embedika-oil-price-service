@@ -1,7 +1,11 @@
-import sbt.*
+import sbt._
 
 
 object Dependencies {
+  val akkaVersion           = "2.6.19"
+  val akkaHttpVersion       = "10.2.9"
+  val akkaHttpCirceVersion  = "1.39.2"
+  val circeVersion          = "0.14.2"
   val configVersion         = "1.4.2"
   val csvParserVersion      = "2.1.0"
   val logbackClassicVersion = "1.2.11"
@@ -22,6 +26,21 @@ object Dependencies {
   val sttp           = "com.softwaremill.sttp.client3" %% "core"            % sttpVersion
   val squants        = "org.typelevel"                 %% "squants"         % squantsVersion
 
+  val akkaLibs = Seq(
+    "com.typesafe.akka" %% "akka-actor-typed"     % akkaVersion,
+    "com.typesafe.akka" %% "akka-stream"          % akkaVersion,
+    "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
+    "de.heikoseeberger" %% "akka-http-circe"      % akkaHttpCirceVersion,
+    "com.typesafe.akka" %% "akka-testkit"         % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test
+  )
+
+  val circeLibs = Seq(
+    "io.circe" %% "circe-core"    % circeVersion,
+    "io.circe" %% "circe-parser"  % circeVersion,
+    "io.circe" %% "circe-generic" % circeVersion
+  )
+
   val loggingLibs = Seq(logbackClassic, scalaLogging)
 
   val testLibs = Seq(scalatest % Test)
@@ -33,5 +52,5 @@ object Dependencies {
     scalaScraper,
     squants,
     sttp
-  ) ++ loggingLibs ++ testLibs
+  ) ++ akkaLibs ++ circeLibs ++ loggingLibs ++ testLibs
 }
