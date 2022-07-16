@@ -6,7 +6,7 @@ import java.time.temporal.ChronoUnit
 import scala.math.Ordering.Implicits.*
 import scala.util.Try
 
-import squants.Money
+import squants.market.*
 
 
 /** Represents an inclusive date range, from [[start]] to [[end]]. */
@@ -39,8 +39,8 @@ object DateRange:
 
 
 /** Represents a single oil price record, consisting of average oil price in the given date range. */
-final case class OilPriceRecord(dateRange: DateRange, price: Money) extends Ordered[OilPriceRecord]:
+final case class OilPriceRecord(dates: DateRange, price: Money) extends Ordered[OilPriceRecord]:
   /** Compares this record's range start to another record's range start, from earliest to latest. */
-  override def compare(that: OilPriceRecord): Int = dateRange.compare(that.dateRange)
+  override def compare(that: OilPriceRecord): Int = dates.compare(that.dates)
 
-  override def toString: String = s"$price $dateRange"
+  override def toString: String = s"$price $dates"

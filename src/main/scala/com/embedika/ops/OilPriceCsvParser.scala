@@ -42,7 +42,7 @@ trait OilPriceCsvParser extends StrictLogging:
   protected def parseRow(csvRow: CsvRow): Try[OilPriceRecord]
 
 /** Parses CSV with oil prices from data.gov.ru */
-trait DataGovRuOilPriceCsvParser extends OilPriceCsvParser:
+trait DataGovRuOilPriceCsvParser extends OilPriceCsvParser with RubMoneyContext:
   private val monthValueToNameMap = Map[java.lang.Long, String](
     (1, "янв"),
     (2, "фев"),
@@ -77,5 +77,6 @@ trait DataGovRuOilPriceCsvParser extends OilPriceCsvParser:
     val price        = decimalFormat.parse(priceRaw).asInstanceOf[java.math.BigDecimal]
     OilPriceRecord(DateRange(startDate, endDate), Money(price))
   }
-
-  private given mc: MoneyContext = MoneyContext(RUB, Set(RUB), Seq.empty, false)
+  
+trait RubMoneyContext:
+  given mc: MoneyContext = MoneyContext(RUB, Set(RUB), Seq.empty, false)

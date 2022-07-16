@@ -37,7 +37,7 @@ final class DataGovRuOilPrices(val httpClient: HttpClient, val sources: OilPrice
 
   override def fetchCurrent()(using blockingEc: IoExecutionContext): Future[Vector[OilPriceRecord]] =
     logger.trace(s"Data.gov.ru oil price provider is fetching current prices")
-    fetchingStrategy() flatMap { contents => Future.fromTry(parseCsv(contents) map (_ sortBy (_.dateRange.start))) }
+    fetchingStrategy() flatMap { contents => Future.fromTry(parseCsv(contents) map (_ sortBy (_.dates.start))) }
 
 
 object DataGovRuOilPrices {

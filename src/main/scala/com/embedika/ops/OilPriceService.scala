@@ -29,15 +29,15 @@ final class OilPriceService(priceCache: OilPriceCache)
       case Vector()       => None
       case Vector(single) => Some(single.price)
       case relatedRecords @ Vector(first, rest*) =>
-        val startDate = first.dateRange.clamp(targetRange.start)
-        val endDate   = rest.last.dateRange.clamp(targetRange.end)
+        val startDate = first.dates.clamp(targetRange.start)
+        val endDate   = rest.last.dates.clamp(targetRange.end)
         // Calculate price periods: a price and amount of days said price is held:
         val pricePeriods = relatedRecords.zipWithIndex map { case (record, index) =>
           // Handle first and last periods separately, since they could contain any amount of days:
           val participatingDays =
-            if index == 0 then DateRange(startDate, record.dateRange.end).daysCount
-            else if index == relatedRecords.length - 1 then DateRange(record.dateRange.start, endDate).daysCount
-            else record.dateRange.daysCount
+            if index == 0 then DateRange(startDate, record.dates.end).daysCount
+            else if index == relatedRecords.length - 1 then DateRange(record.dates.start, endDate).daysCount
+            else record.dates.daysCount
           (record.price, participatingDays)
         }
         // Now we just need to calculate (<period price> * <days in period>) / <total days in all periods>
@@ -87,7 +87,7 @@ final class OilPriceService(priceCache: OilPriceCache)
       findRecordForDate(targetDate, prices).map(_._1.price)
     } map { foundPrice =>
       logger.trace(s"Found price at a date $targetDate for $providerId: $foundPrice")
-    foundPrice
+      foundPrice
     }
 
 
@@ -132,7 +132,7 @@ trait OilPriceRecordSearchHelper:
       // targetDate either belongs to the last record's date range or is more into the future than any record.
       case InsertionPoint(insertionPoint) if insertionPoint == prices.length =>
         val lastRecord = prices(insertionPoint - 1)
-        if lastRecord.dateRange.contains(targetDate) then Some((lastRecord, insertionPoint - 1)) else None
+        if lastRecord.dates.contains(targetDate) then Some((lastRecord, insertionPoint - 1)) else None
       // targetDate is in the date range of the record at insertionPoint - 1
       case InsertionPoint(insertionPoint) => Some((prices(insertionPoint - 1), insertionPoint - 1))
     }
