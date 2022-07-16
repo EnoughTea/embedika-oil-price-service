@@ -20,7 +20,7 @@ trait CommonTestFeatures
     with Inspectors
     with ScalaFutures
 
-trait PoolEnvironment extends Environment {
+trait PoolEnvironment extends HasEnvironment {
   override implicit val ioEc: IoExecutionContext = new IoExecutionContext(ExecutionContext.fromExecutor(Executors.newFixedThreadPool(8)))
   override implicit val cpuEc: CpuExecutionContext = new CpuExecutionContext(ExecutionContext.fromExecutor(new ForkJoinPool()))
 }

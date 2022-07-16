@@ -11,7 +11,7 @@ import com.github.blemale.scaffeine.{AsyncLoadingCache, Scaffeine}
 
 
 /** Trait for something capable of caching provider's oil price records
-  *  to avoid querying remote oil price sources all the time.
+  * to avoid unnecessary querying of the remote oil price sources.
   */
 trait OilPriceCache {
 

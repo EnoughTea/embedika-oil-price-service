@@ -7,30 +7,36 @@ import akka.actor.typed.scaladsl.*
 import com.typesafe.config.{Config, ConfigFactory}
 
 
+/** Trait for something that has a [[CpuExecutionContext]] */
 trait HasCpuExecutionContext {
   implicit def cpuEc: CpuExecutionContext
 }
 
 
+/** Trait for something that has a [[IoExecutionContext]] */
 trait HasIoExecutionContext {
   implicit def ioEc: IoExecutionContext
 }
 
 
-trait HasSettings {
+/** Provides loaded Typesafe config and its typed variant: [[AppSettings]] */
+trait HasLoadedSettings {
   lazy val config: Config                  = ConfigFactory.load()
   lazy val triedSettings: Try[AppSettings] = AppSettings(config)
 }
 
 
+/** Provides [[ActorSystem{T}]] */
 trait HasSystem[T] {
   implicit def system: ActorSystem[T]
 }
 
-trait Environment extends HasCpuExecutionContext with HasIoExecutionContext with HasSettings
+/** Provides common non-invasive stuff. */
+trait HasEnvironment extends HasCpuExecutionContext with HasIoExecutionContext with HasLoadedSettings
 
 
-trait SystemEnvironment extends Environment with HasSystem[Nothing] {
+/** Provides system and its execution contexts. */
+trait HasLoadedSystemEnvironment extends HasEnvironment with HasSystem[Nothing] {
   override implicit lazy val system: ActorSystem[Nothing] = ActorSystem[Nothing](Behaviors.empty, systemName)
   override implicit lazy val cpuEc: CpuExecutionContext = new CpuExecutionContext(
     system.dispatchers.lookup(DispatcherSelector.default())

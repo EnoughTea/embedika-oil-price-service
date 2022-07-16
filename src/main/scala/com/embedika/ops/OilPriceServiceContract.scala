@@ -57,4 +57,5 @@ trait OilPriceServiceContract {
   ): Future[Option[Money]]
 }
 
+/** Stores found min and max prices. */
 final case class MinMaxPrices(min: Money, max: Money)

@@ -10,7 +10,7 @@ import scala.util.control.NonFatal
 import akka.http.scaladsl.Http
 
 /** Wires up components needed for service to work. */
-trait Setup extends SystemEnvironment with HasSettings {
+trait Setup extends HasLoadedSystemEnvironment with HasLoadedSettings {
   val systemName             = "oil-price-service"
   val settings: AppSettings  = triedSettings.get
   val httpClient             = new BasicHttpClient()(ioEc)

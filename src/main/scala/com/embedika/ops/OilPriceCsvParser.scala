@@ -24,9 +24,7 @@ trait OilPriceCsvParser extends StrictLogging {
     logger.trace("Parsing CSV from input stream")
     buildCsvReader(csvContents) flatMap {
       Using(_) { csvReader =>
-        val rowsOrFirstFailure = Try(getRows(csvReader) map {
-          parseRow(_).get
-        })
+        val rowsOrFirstFailure = Try(getRows(csvReader) map { parseRow(_).get })
         rowsOrFirstFailure map { rows =>
           val parsedRecords = rows.iterator().asScala.toVector
           logger.trace(s"Parsed CSV from input stream, total records: ${parsedRecords.length}")
