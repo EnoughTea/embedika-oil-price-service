@@ -7,18 +7,23 @@ import scala.language.postfixOps
 import scala.util.Try
 import scala.util.control.NonFatal
 
-import akka.http.scaladsl.*
+import akka.http.scaladsl.Http
 
-
-object Main extends App with SystemEnvironment with OilPriceServiceRoutes with HasSettings {
+/** Wires up components needed for service to work. */
+trait Setup extends SystemEnvironment with HasSettings {
   val systemName             = "oil-price-service"
-  val settings               = triedSettings.get
+  val settings: AppSettings  = triedSettings.get
   val httpClient             = new BasicHttpClient()(ioEc)
   val dataGovRuPriceProvider = new DataGovRuOilPrices(new DataGovRuOilPriceSource(settings, httpClient))
-  val oilPriceProviders      = Seq(dataGovRuPriceProvider)
+  val oilPriceProviders      = Vector(dataGovRuPriceProvider)
   val oilPriceCache          = new OilPriceCache(oilPriceProviders, 1 hour)(ioEc)
   val service                = new OilPriceService(oilPriceCache)
+}
 
+
+// Note that trait order is important: Setup should go before OilPriceServiceRoutes,
+// since OilPriceServiceRoutes uses Setup.oilPriceCache field.
+object Main extends App with Setup with OilPriceServiceRoutes {
   Try {
     oilPriceCache.preload()
     val http = Http()

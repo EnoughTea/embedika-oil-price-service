@@ -6,6 +6,7 @@ import scala.concurrent.Future
 import scala.util.Properties.lineSeparator
 import scala.util.{Failure, Success, Try}
 
+import akka.http.scaladsl.server.*
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.generic.auto.*
 
@@ -13,6 +14,8 @@ import io.circe.generic.auto.*
 /** Contains actual oil price service HTTP routes. */
 trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPriceRecordJsonFormat {
   def service: OilPriceService
+  def oilPriceCache: OilPriceCache
+
   implicit def cpuEc: CpuExecutionContext
 
   private val helloMessage: String =
@@ -31,6 +34,11 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
   private val pricesMessage: String = "You should specify provider in the path, eg: " +
     "/prices/data.gov.ru/averageOver?startDate=2020-12-31&endDate=2021-01-01"
 
+  private val providerIdCheck: ValidatedProviderId = new ValidatedProviderId(oilPriceCache)
+  private val wrongProviderIdHandler: RejectionHandler = RejectionHandler.newBuilder()
+    .handle { case MalformedPathSegmentRejection(_, msg) => complete(ApiResponse.notFound(msg).toHttpResponse) }
+    .result()
+
   registerRoute {
     (pathEndOrSingleSlash & get) {
       complete(ApiResponse.ok(helloMessage).toHttpResponse)
@@ -45,7 +53,7 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
 
   registerRoute {
 
-    pathPrefix("prices" / Segment) { providerId =>
+    (handleRejections(wrongProviderIdHandler) & providerIdCheck(pathPrefix("prices" / Segment))) { providerId =>
       get {
         concat(
           path("all") {
@@ -118,4 +126,15 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
       case None => Future.successful(ApiResponse.badRequest(s"$paramName is missing from parameters"))
     }
   }
+}
+
+final case class MalformedPathSegmentRejection(segmentName: String, errorMsg: String) extends Rejection
+
+
+final class ValidatedProviderId(oilPriceCache: OilPriceCache) {
+  def apply(directive: Directive1[String]): Directive1[String] =
+    directive.filter(
+      id => oilPriceCache.getProvider(id).nonEmpty,
+      MalformedPathSegmentRejection(":providerId", "Got non-existent oil price provider id")
+    )
 }
