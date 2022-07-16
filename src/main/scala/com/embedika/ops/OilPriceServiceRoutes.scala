@@ -42,7 +42,7 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
             }
             ApiResponse.completeWith(eventualResponse)
           },
-          (path("range") & parameterMap) { params =>
+          (path("averageOver") & parameterMap) { params =>
             val eventualResponse = withLocalDateParam("startDate", params) { startDate =>
               withLocalDateParam("endDate", params) { endDate =>
                 val dateRange = DateRange(startDate, endDate)
