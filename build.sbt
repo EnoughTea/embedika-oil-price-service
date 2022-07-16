@@ -1,7 +1,7 @@
 import Dependencies._
 
-ThisBuild / scalacOptions := Seq("-unchecked", "-deprecation")
-ThisBuild / scalaVersion  := "3.1.3"
+ThisBuild / scalacOptions := Seq("-unchecked", "-deprecation", "-Xsource:3")
+ThisBuild / scalaVersion  := "2.13.8"
 
 lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging)

@@ -3,7 +3,7 @@ package com.embedika.ops
 import com.embedika.ops.utils.*
 
 
-final class DataGovRuOilPricesTests extends UnitSpec:
+final class DataGovRuOilPricesTests extends UnitSpec {
   "A DataGovRuOilPrices" should "fetch prices from test sources" in {
     val provider = makePriceProvider()
 
@@ -15,4 +15,5 @@ final class DataGovRuOilPricesTests extends UnitSpec:
   }
 
   def makePriceProvider(): DataGovRuOilPrices =
-    DataGovRuOilPrices(TestHttpClient(), TestOilPriceSource())
+    new DataGovRuOilPrices(new TestHttpClient(), new TestOilPriceSource())
+}

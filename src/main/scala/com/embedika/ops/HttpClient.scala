@@ -13,18 +13,19 @@ import sttp.model.Uri
 
 
 /** Trait for a simple HTTP client capable of GETting something from the web. */
-trait HttpClient extends AutoCloseable:
+trait HttpClient extends AutoCloseable {
   def get(uri: URI, timeout: FiniteDuration = 5 seconds): Future[InputStream]
+}
 
 
 /** Performs a simple HTTP GET request for an optional task of downloading fresh oil prices. Uses STTP because akka-http
   * does not support request timeouts out of the box atm: https://github.com/akka/akka-http/issues/42
   */
-final class BasicHttpClient(using ec: IoExecutionContext) extends HttpClient with StrictLogging:
+final class BasicHttpClient(implicit ec: IoExecutionContext) extends HttpClient with StrictLogging {
   private val backend = HttpClientFutureBackend()
 
   /** Fires a single HttpRequest to the given URI, returns response body as an InputStream. */
-  def get(uri: URI, timeout: FiniteDuration = 5 seconds): Future[InputStream] =
+  def get(uri: URI, timeout: FiniteDuration = 5 seconds): Future[InputStream] = {
     logger.trace(s"Sending GET request to $uri with timeout $timeout")
     val request = basicRequest.get(Uri(uri)).readTimeout(timeout)
     request.send(backend) flatMap { response =>
@@ -33,5 +34,7 @@ final class BasicHttpClient(using ec: IoExecutionContext) extends HttpClient wit
         body => Future(new ByteArrayInputStream(body.getBytes("UTF-8")))
       )
     }
+  }
 
   def close(): Unit = backend.close()
+}

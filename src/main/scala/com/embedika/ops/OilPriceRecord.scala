@@ -10,9 +10,10 @@ import squants.market.*
 
 
 /** Represents an inclusive date range, from [[start]] to [[end]]. */
-final case class DateRange(start: LocalDate, end: LocalDate) extends Ordered[DateRange]:
+final case class DateRange(start: LocalDate, end: LocalDate) extends Ordered[DateRange] {
+
   /** Clamps given date between [[start]] and [[end]] dates of this range, inclusively. */
-  def clamp(date: LocalDate): LocalDate = if date <= start then start else if date >= end then end else date
+  def clamp(date: LocalDate): LocalDate = if (date <= start) start else if (date >= end) end else date
 
   /** Compares this range start date to another range start date, from earliest to latest. */
   override def compare(that: DateRange): Int = start.compareTo(that.start)
@@ -24,9 +25,11 @@ final case class DateRange(start: LocalDate, end: LocalDate) extends Ordered[Dat
   def daysCount: Long = ChronoUnit.DAYS.between(start, end) + 1
 
   override def toString: String = s"[$start, $end]"
+}
 
 
-object DateRange:
+object DateRange {
+
   /** Parses ISO local date text such as "2007-12-03" into a date range of a single day. */
   def parse(singleDate: String): Try[DateRange] = Try {
     DateRange(LocalDate.parse(singleDate), LocalDate.parse(singleDate))
@@ -36,11 +39,14 @@ object DateRange:
   def parse(start: String, end: String): Try[DateRange] = Try {
     DateRange(LocalDate.parse(start), LocalDate.parse(end))
   }
+}
 
 
 /** Represents a single oil price record, consisting of average oil price in the given date range. */
-final case class OilPriceRecord(dates: DateRange, price: Money) extends Ordered[OilPriceRecord]:
+final case class OilPriceRecord(dates: DateRange, price: Money) extends Ordered[OilPriceRecord] {
+
   /** Compares this record's range start to another record's range start, from earliest to latest. */
   override def compare(that: OilPriceRecord): Int = dates.compare(that.dates)
 
   override def toString: String = s"$price $dates"
+}

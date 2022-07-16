@@ -11,18 +11,22 @@ import java.util.stream.Stream
 import scala.jdk.CollectionConverters.*
 import scala.util.{Try, Using}
 
+import com.typesafe.scalalogging.StrictLogging
 import de.siegmar.fastcsv.reader.{CsvReader, CsvRow}
 import squants.market.{Money, MoneyContext, RUB}
-import com.typesafe.scalalogging.StrictLogging
+
 
 /** Trait for something capable of converting an input stream of CSV with oil prices into a typed representation. */
-trait OilPriceCsvParser extends StrictLogging:
+trait OilPriceCsvParser extends StrictLogging {
+
   /** Parses an input stream of CSV with oil prices into a vector of [[OilPriceRecord]]. */
-  def parseCsv(csvContents: InputStreamReader): Try[Vector[OilPriceRecord]] =
+  def parseCsv(csvContents: InputStreamReader): Try[Vector[OilPriceRecord]] = {
     logger.trace("Parsing CSV from input stream")
     buildCsvReader(csvContents) flatMap {
       Using(_) { csvReader =>
-        val rowsOrFirstFailure = Try(getRows(csvReader) map { parseRow(_).get })
+        val rowsOrFirstFailure = Try(getRows(csvReader) map {
+          parseRow(_).get
+        })
         rowsOrFirstFailure map { rows =>
           val parsedRecords = rows.iterator().asScala.toVector
           logger.trace(s"Parsed CSV from input stream, total records: ${parsedRecords.length}")
@@ -30,6 +34,7 @@ trait OilPriceCsvParser extends StrictLogging:
         }
       }.flatten
     }
+  }
 
   /** Creates a default CSV reader using ';' as a separator. */
   protected def buildCsvReader(csvContents: InputStreamReader): Try[CsvReader] =
@@ -40,9 +45,11 @@ trait OilPriceCsvParser extends StrictLogging:
 
   /** Implement this to actually parse a CSV row into an oil price record. */
   protected def parseRow(csvRow: CsvRow): Try[OilPriceRecord]
+}
+
 
 /** Parses CSV with oil prices from data.gov.ru */
-trait DataGovRuOilPriceCsvParser extends OilPriceCsvParser with RubMoneyContext:
+trait DataGovRuOilPriceCsvParser extends OilPriceCsvParser with RubMoneyContext {
   private val monthValueToNameMap = Map[java.lang.Long, String](
     (1, "янв"),
     (2, "фев"),
@@ -58,7 +65,7 @@ trait DataGovRuOilPriceCsvParser extends OilPriceCsvParser with RubMoneyContext:
     (12, "дек")
   ).asJava
 
-  private val formatter = DateTimeFormatterBuilder()
+  private val formatter = new DateTimeFormatterBuilder()
     .appendPattern("dd.")
     .appendText(ChronoField.MONTH_OF_YEAR, monthValueToNameMap)
     .appendPattern(".yy")
@@ -77,6 +84,9 @@ trait DataGovRuOilPriceCsvParser extends OilPriceCsvParser with RubMoneyContext:
     val price        = decimalFormat.parse(priceRaw).asInstanceOf[java.math.BigDecimal]
     OilPriceRecord(DateRange(startDate, endDate), Money(price))
   }
-  
-trait RubMoneyContext:
-  given mc: MoneyContext = MoneyContext(RUB, Set(RUB), Seq.empty, false)
+}
+
+
+trait RubMoneyContext {
+  implicit val mc: MoneyContext = MoneyContext(RUB, Set(RUB), Seq.empty, allowIndirectConversions = false)
+}

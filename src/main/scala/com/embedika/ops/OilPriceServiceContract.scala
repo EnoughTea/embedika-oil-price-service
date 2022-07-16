@@ -8,7 +8,8 @@ import squants.market.Money
 
 
 /** Public contract for oil price-related operations. */
-trait OilPriceServiceContract:
+trait OilPriceServiceContract {
+
   /** Retrieves all oil price records from the provider with the given id.
     *
     * @param providerId Provider id.
@@ -20,10 +21,10 @@ trait OilPriceServiceContract:
     *
     * @param targetRange Date range to calculate average price for,
     *                    should at least intersect dates in records.
-    * @param providerId Provider id.
+    * @param providerId  Provider id.
     * @return Calculated average oil price, or None of given range was completely outside the range of all oil records.
     */
-  def priceInDateRange(targetRange: DateRange, providerId: String)(using
+  def priceInDateRange(targetRange: DateRange, providerId: String)(implicit
       ec: CpuExecutionContext
   ): Future[Option[Money]]
 
@@ -31,10 +32,10 @@ trait OilPriceServiceContract:
     *
     * @param targetRange Date range to search for minimum and maximum prices,
     *                    should at least intersect dates in records.
-    * @param providerId Provider id.
+    * @param providerId  Provider id.
     * @return Found min and max prices, or None of given range was completely outside the range of all oil records.
     */
-  def minMaxPricesInDateRange(targetRange: DateRange, providerId: String)(using
+  def minMaxPricesInDateRange(targetRange: DateRange, providerId: String)(implicit
       ec: CpuExecutionContext
   ): Future[Option[(Money, Money)]]
 
@@ -44,6 +45,7 @@ trait OilPriceServiceContract:
     * @param providerId Provider id.
     * @return Found oil price or None.
     */
-  def priceAtDate(targetDate: LocalDate, providerId: String)(using
+  def priceAtDate(targetDate: LocalDate, providerId: String)(implicit
       ec: CpuExecutionContext
   ): Future[Option[Money]]
+}

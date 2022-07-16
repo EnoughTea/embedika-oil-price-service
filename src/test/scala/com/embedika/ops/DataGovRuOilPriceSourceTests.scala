@@ -3,7 +3,7 @@ package com.embedika.ops
 import com.embedika.ops.utils.*
 
 
-final class DataGovRuOilPriceSourceTests extends UnitSpec with HasSettings:
+final class DataGovRuOilPriceSourceTests extends UnitSpec with HasSettings {
   "An DataGovRuOilPriceSource" should "have a valid local price source" in {
     val priceSource = makePriceSource()
 
@@ -25,4 +25,5 @@ final class DataGovRuOilPriceSourceTests extends UnitSpec with HasSettings:
   }
 
   def makePriceSource(): DataGovRuOilPriceSource =
-    DataGovRuOilPriceSource(triedSettings.get, TestHttpClient())
+    new DataGovRuOilPriceSource(triedSettings.get, new TestHttpClient())
+}

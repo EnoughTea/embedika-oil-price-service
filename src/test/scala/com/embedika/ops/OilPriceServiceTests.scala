@@ -6,7 +6,7 @@ import com.embedika.ops.utils.*
 import squants.market.*
 
 
-final class OilPriceServiceTests extends UnitSpec:
+final class OilPriceServiceTests extends UnitSpec {
   "An OilPriceService" should "find a single price point for an existing date" in {
     val service = makePriceService()
 
@@ -64,7 +64,6 @@ final class OilPriceServiceTests extends UnitSpec:
     }
   }
 
-
   it should "find a min-max for an arbitrary date range" in {
     val service = makePriceService()
 
@@ -76,7 +75,8 @@ final class OilPriceServiceTests extends UnitSpec:
     }
   }
 
-  def makePriceService(): OilPriceService = OilPriceService(OilPriceCache(Seq(makePriceProvider())))
+  def makePriceService(): OilPriceService = new OilPriceService(new OilPriceCache(Seq(makePriceProvider())))
 
   def makePriceProvider(): DataGovRuOilPrices =
-    DataGovRuOilPrices(TestHttpClient(), TestOilPriceSource())
+    new DataGovRuOilPrices(new TestHttpClient(), new TestOilPriceSource())
+}

@@ -5,10 +5,10 @@ import scala.language.postfixOps
 import com.embedika.ops.utils.*
 
 
-final class OilPriceCacheTests extends UnitSpec:
+final class OilPriceCacheTests extends UnitSpec {
   "An OilPriceCache" should "fetch existing prices from provider" in {
     val dataGovRuPrices = makePriceProvider()
-    val cache = OilPriceCache(Seq(dataGovRuPrices))
+    val cache = new OilPriceCache(Seq(dataGovRuPrices))
 
     val fetchCurrentPrices = cache.get(dataGovRuPrices.id)
 
@@ -19,7 +19,7 @@ final class OilPriceCacheTests extends UnitSpec:
 
   it should "update expired prices from provider automatically" in {
     val dataGovRuPrices = makePriceProvider()
-    val cache = OilPriceCache(Seq(dataGovRuPrices), 1 milli)
+    val cache = new OilPriceCache(Seq(dataGovRuPrices), 1 milli)
 
     cache.get(dataGovRuPrices.id)
     Thread.sleep(5)
@@ -31,4 +31,5 @@ final class OilPriceCacheTests extends UnitSpec:
   }
 
   def makePriceProvider(): DataGovRuOilPrices =
-    DataGovRuOilPrices(TestHttpClient(), TestOilPriceSource())
+    new DataGovRuOilPrices(new TestHttpClient(), new TestOilPriceSource())
+}

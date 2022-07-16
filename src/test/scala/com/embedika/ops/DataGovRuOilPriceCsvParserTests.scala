@@ -1,15 +1,14 @@
 package com.embedika.ops
 
 import java.io.InputStreamReader
-import java.time.LocalDate
 
 import scala.util.Using
 
 import com.embedika.ops.utils.UnitSpec
-import squants.market.{Money, MoneyContext, RUB}
+import squants.market.{Money, RUB}
 
 
-final class DataGovRuOilPriceCsvParserTests extends UnitSpec with DataGovRuOilPriceCsvParser:
+final class DataGovRuOilPriceCsvParserTests extends UnitSpec with DataGovRuOilPriceCsvParser {
   "An DataGovRuOilPriceCsvParser" should "parse all records from the test CSV" in {
     val parsed = Using(testCsv) { csvReader =>
       parseCsv(csvReader)
@@ -36,3 +35,4 @@ final class DataGovRuOilPriceCsvParserTests extends UnitSpec with DataGovRuOilPr
 
   def testCsv: InputStreamReader =
     scala.io.Source.fromResource("data-20220617T1317-structure-20210419T0745.csv").reader()
+}

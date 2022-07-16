@@ -1,6 +1,6 @@
 package com.embedika.ops
 
-import java.io.{InputStream, InputStreamReader}
+import java.io.InputStreamReader
 import java.net.URI
 
 import scala.concurrent.Future
@@ -9,31 +9,32 @@ import com.typesafe.scalalogging.StrictLogging
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.dsl.DSL.*
 import net.ruippeixotog.scalascraper.dsl.DSL.Extract.*
-import net.ruippeixotog.scalascraper.dsl.DSL.Parse.*
-import net.ruippeixotog.scalascraper.model.*
 
 
 /** Used for something capable of providing something containing oil prices in an unknown format. */
-trait OilPriceSource:
+trait OilPriceSource {
+
   /** Fetches oil prices from a local source. */
-  def local()(using ec: IoExecutionContext): Future[InputStreamReader]
+  def local()(implicit ec: IoExecutionContext): Future[InputStreamReader]
 
   /** Fetches oil prices from a remote source. */
-  def remote()(using ec: IoExecutionContext): Future[InputStreamReader]
+  def remote()(implicit ec: IoExecutionContext): Future[InputStreamReader]
+}
 
 
 /** Provides CSV stream readers for data.gov.ru oil prices. */
 final class DataGovRuOilPriceSource(appSettings: AppSettings, httpClient: HttpClient)
     extends OilPriceSource
-    with StrictLogging:
+    with StrictLogging {
+
   /** Fetches oil prices from a JAR resource. Not a good idea for a real service, but good enough for our purposes. */
-  override def local()(using ec: IoExecutionContext): Future[InputStreamReader] = Future {
+  override def local()(implicit ec: IoExecutionContext): Future[InputStreamReader] = Future {
     val localResource = "data-20220617T1317-structure-20210419T0745.csv"
     logger.trace(s"Data.gov.ru price source is sourcing local oil prices from $localResource")
     scala.io.Source.fromResource(localResource).reader()
   }
 
-  override def remote()(using ec: IoExecutionContext): Future[InputStreamReader] =
+  override def remote()(implicit ec: IoExecutionContext): Future[InputStreamReader] = {
     logger.trace(s"Data.gov.ru price source is sourcing remote oil prices from ${appSettings.dataGovRu.oilPageLink}")
     val futureDocBytes = httpClient.get(appSettings.dataGovRu.oilPageLink)
     futureDocBytes flatMap { bytes =>
@@ -47,3 +48,5 @@ final class DataGovRuOilPriceSource(appSettings: AppSettings, httpClient: HttpCl
         new RuntimeException("Cannot find download link for the data.gov.ru oil prices CSV (utf8)")
       )
     }
+  }
+}

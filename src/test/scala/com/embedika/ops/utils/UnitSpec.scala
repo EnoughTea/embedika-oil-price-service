@@ -21,9 +21,10 @@ trait CommonTestFeatures
     with ScalaFutures
 
 
-trait TestImplicits extends ScalaFutures:
-  given defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(2, Seconds), interval = Span(5, Millis))
-  given ioEc: IoExecutionContext   = IoExecutionContext(ExecutionContext.fromExecutor(Executors.newFixedThreadPool(8)))
-  given cpuEc: CpuExecutionContext = CpuExecutionContext(ExecutionContext.fromExecutor(ForkJoinPool()))
+trait TestImplicits extends ScalaFutures {
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(2, Seconds), interval = Span(5, Millis))
+  implicit val ioEc: IoExecutionContext = new IoExecutionContext(ExecutionContext.fromExecutor(Executors.newFixedThreadPool(8)))
+  implicit val cpuEc: CpuExecutionContext = new CpuExecutionContext(ExecutionContext.fromExecutor(new ForkJoinPool()))
+}
 
 abstract class UnitSpec extends AnyFlatSpec with CommonTestFeatures with TestImplicits
