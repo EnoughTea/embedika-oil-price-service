@@ -2,8 +2,8 @@ package com.embedika.ops
 
 import scala.util.Try
 
-import akka.actor.typed.scaladsl.*
 import akka.actor.typed.*
+import akka.actor.typed.scaladsl.*
 import com.typesafe.config.{Config, ConfigFactory}
 
 
@@ -34,12 +34,13 @@ trait HasSystem[T] extends AutoCloseable {
 
 trait Environment extends HasCpuExecutionContext with HasIoExecutionContext with HasSettings
 
+
 trait SystemEnvironment extends Environment with HasSystem[Nothing] {
-  override implicit val system: ActorSystem[Nothing] = ActorSystem[Nothing](Behaviors.empty, systemName)
-  override implicit val cpuEc: CpuExecutionContext = new CpuExecutionContext(
+  override implicit lazy val system: ActorSystem[Nothing] = ActorSystem[Nothing](Behaviors.empty, systemName)
+  override implicit lazy val cpuEc: CpuExecutionContext = new CpuExecutionContext(
     system.dispatchers.lookup(DispatcherSelector.blocking())
   )
-  override implicit val ioEc: IoExecutionContext = new IoExecutionContext(
+  override lazy val ioEc: IoExecutionContext = new IoExecutionContext(
     system.dispatchers.lookup(DispatcherSelector.default())
   )
 
