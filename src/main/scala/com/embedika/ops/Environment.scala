@@ -33,10 +33,10 @@ trait Environment extends HasCpuExecutionContext with HasIoExecutionContext with
 trait SystemEnvironment extends Environment with HasSystem[Nothing] {
   override implicit lazy val system: ActorSystem[Nothing] = ActorSystem[Nothing](Behaviors.empty, systemName)
   override implicit lazy val cpuEc: CpuExecutionContext = new CpuExecutionContext(
-    system.dispatchers.lookup(DispatcherSelector.blocking())
+    system.dispatchers.lookup(DispatcherSelector.default())
   )
   override lazy val ioEc: IoExecutionContext = new IoExecutionContext(
-    system.dispatchers.lookup(DispatcherSelector.default())
+    system.dispatchers.lookup(DispatcherSelector.blocking())
   )
 
   def systemName: String
