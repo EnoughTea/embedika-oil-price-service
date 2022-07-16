@@ -16,7 +16,7 @@ trait Setup extends SystemEnvironment with HasSettings {
   val httpClient             = new BasicHttpClient()(ioEc)
   val dataGovRuPriceProvider = new DataGovRuOilPrices(new DataGovRuOilPriceSource(settings, httpClient))
   val oilPriceProviders      = Vector(dataGovRuPriceProvider)
-  val oilPriceCache          = new OilPriceCache(oilPriceProviders, 1 hour)(ioEc)
+  val oilPriceCache          = new ScaffeineOilPriceCache(oilPriceProviders, 1 hour)(ioEc)
   val service                = new OilPriceService(oilPriceCache)
 }
 
