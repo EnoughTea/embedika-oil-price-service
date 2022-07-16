@@ -23,13 +23,8 @@ trait HasSettings {
 }
 
 
-trait HasSystem[T] extends AutoCloseable {
+trait HasSystem[T] {
   implicit def system: ActorSystem[T]
-
-  override def close(): Unit = {
-    super.close()
-    system.terminate()
-  }
 }
 
 trait Environment extends HasCpuExecutionContext with HasIoExecutionContext with HasSettings
