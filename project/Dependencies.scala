@@ -27,12 +27,13 @@ object Dependencies {
   val squants        = "org.typelevel"                 %% "squants"         % squantsVersion
 
   val akkaLibs = Seq(
-    "com.typesafe.akka" %% "akka-actor-typed"     % akkaVersion,
-    "com.typesafe.akka" %% "akka-stream"          % akkaVersion,
-    "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
-    "de.heikoseeberger" %% "akka-http-circe"      % akkaHttpCirceVersion,
-    "com.typesafe.akka" %% "akka-testkit"         % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test
+    "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
+    "com.typesafe.akka" %% "akka-stream"       % akkaVersion,
+    "com.typesafe.akka" %% "akka-http"         % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-caching" % akkaHttpVersion,
+    "de.heikoseeberger" %% "akka-http-circe"   % akkaHttpCirceVersion,
+    "com.typesafe.akka" %% "akka-testkit"      % akkaVersion % Test,
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
   )
 
   val circeLibs = Seq(
