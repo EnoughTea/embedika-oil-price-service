@@ -5,10 +5,10 @@ ThisBuild / scalacOptions := Seq("-unchecked", "-deprecation", "-Xsource:3")
 ThisBuild / scalaVersion  := "2.13.8"
 
 lazy val root = (project in file("."))
-  .enablePlugins(JavaAppPackaging)
+  .enablePlugins(JavaAppPackaging, PackPlugin)
   .settings(
     name         := "oil-price-service",
-    version      := "1.0.0-SNAPSHOT",
+    version      := "1.0.0",
     organization := "com.embedika",
     libraryDependencies ++= opsDeps,
 
