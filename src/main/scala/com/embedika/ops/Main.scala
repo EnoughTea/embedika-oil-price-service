@@ -9,6 +9,7 @@ import scala.util.control.NonFatal
 
 import akka.http.scaladsl.Http
 
+
 /** Wires up components needed for service to work. */
 trait Setup extends HasLoadedSystemEnvironment with HasLoadedSettings {
   val systemName             = "oil-price-service"
@@ -25,7 +26,7 @@ trait Setup extends HasLoadedSystemEnvironment with HasLoadedSettings {
 // since OilPriceServiceRoutes uses Setup.oilPriceCache field.
 object Main extends App with Setup with OilPriceServiceRoutes {
   Try {
-    oilPriceCache.preload()
+    oilPriceCache.preload() // This future is not awaited by design
     val http = Http()
       .newServerAt(settings.host, settings.port)
       .bindFlow(routes)

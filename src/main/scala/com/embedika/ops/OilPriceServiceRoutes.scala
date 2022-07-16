@@ -26,15 +26,15 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
       "GET /prices/stats — gets a total count of current oil price records for all providers.",
       "GET /prices/:providerId/all — gets a list of provider's current oil prices.",
       "GET /prices/:providerId/single?date=2020-12-31 — gets provider's oil price for the given day.",
-      "GET /prices/:providerId/averageOver?startDate=2020-12-31&endDate=2021-01-01 — " +
+      "GET /prices/:providerId/averageOver?startDate=2019-12-31&endDate=2021-01-01 — " +
         "gets provider's oil price averaged over the given date range.",
-      "GET /prices/:providerId/minmax?startDate=2020-12-31&endDate=2021-01-01 — " +
+      "GET /prices/:providerId/minmax?startDate=2019-12-31&endDate=2021-01-01 — " +
         "gets provider's minimum and maxium prices in the given date range.",
       s"${lineSeparator}Currently, only data.gov.ru is available as a :providerId"
     ) mkString lineSeparator
 
   private val pricesMessage: String = "You should specify provider in the path, eg: " +
-    "/prices/data.gov.ru/averageOver?startDate=2020-12-31&endDate=2021-01-01"
+    "/prices/data.gov.ru/averageOver?startDate=2019-12-31&endDate=2021-01-01"
 
   private val providerIdCheck: ValidatedProviderId = new ValidatedProviderId(oilPriceCache)
   private val wrongProviderIdHandler: RejectionHandler = RejectionHandler
@@ -86,7 +86,7 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
             }
             ApiResponse.completeWith(eventualResponse)
           },
-          (path("averageOver") & parameterMap) { params =>
+          (path("averageover") & parameterMap) { params =>
             logger.debug(s"Incoming HTTP request for a price averaged over dates, params: $parameterMap")
             val eventualResponse = withLocalDateParam("startDate", params) { startDate =>
               withLocalDateParam("endDate", params) { endDate =>
