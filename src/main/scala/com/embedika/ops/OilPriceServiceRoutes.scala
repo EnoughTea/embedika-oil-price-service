@@ -3,8 +3,8 @@ package com.embedika.ops
 import java.time.LocalDate
 
 import scala.concurrent.Future
-import scala.util.Properties.lineSeparator
 import scala.util.{Failure, Success, Try}
+import scala.util.Properties.lineSeparator
 
 import akka.http.scaladsl.server.*
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
@@ -13,16 +13,17 @@ import io.circe.generic.auto.*
 
 /** Contains actual oil price service HTTP routes. */
 trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPriceRecordJsonFormat {
-  def service: OilPriceService
   def oilPriceCache: OilPriceCache
+  def oilPriceProviders: Vector[OilPriceProvider]
+  def service: OilPriceService
 
   implicit def cpuEc: CpuExecutionContext
 
   private val helloMessage: String =
     Seq(
       "Welcome to the oil price service. Try one of the following routes:",
+      "GET /prices/stats — gets a total count of current oil price records for all providers.",
       "GET /prices/:providerId/all — gets a list of provider's current oil prices.",
-      "GET /prices/:providerId/stats — gets a total count of provider's current oil prices.",
       "GET /prices/:providerId/single?date=2020-12-31 — gets provider's oil price for the given day.",
       "GET /prices/:providerId/averageOver?startDate=2020-12-31&endDate=2021-01-01 — " +
         "gets provider's oil price averaged over the given date range.",
@@ -35,7 +36,8 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
     "/prices/data.gov.ru/averageOver?startDate=2020-12-31&endDate=2021-01-01"
 
   private val providerIdCheck: ValidatedProviderId = new ValidatedProviderId(oilPriceCache)
-  private val wrongProviderIdHandler: RejectionHandler = RejectionHandler.newBuilder()
+  private val wrongProviderIdHandler: RejectionHandler = RejectionHandler
+    .newBuilder()
     .handle { case MalformedPathSegmentRejection(_, msg) => complete(ApiResponse.notFound(msg).toHttpResponse) }
     .result()
 
@@ -52,22 +54,29 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
   }
 
   registerRoute {
+    (path("prices" / "stats") & get) {
+      final case class OilPriceProviderStats(providerId: String, totalOilPriceRecords: Long)
+      logger.debug("Incoming HTTP request for all price providers stats.")
+      val eventualStats = oilPriceProviders map { provider =>
+        oilPriceCache.get(provider.id) map (recs => OilPriceProviderStats(provider.id, recs.length))
+      }
+      val eventualResponse = Future.sequence(eventualStats) map { EntityResponse(_) }
+      ApiResponse.completeWith(eventualResponse)
+    }
+  }
+
+  registerRoute {
 
     (handleRejections(wrongProviderIdHandler) & providerIdCheck(pathPrefix("prices" / Segment))) { providerId =>
       get {
         concat(
           path("all") {
+            logger.debug("Incoming HTTP request for all oil price records.")
             val eventualResponse = service.allRecords(providerId) map (ApiResponse.entity(_))
             ApiResponse.completeWith(eventualResponse)
           },
-          path("stats") {
-            final case class RecordStats(total: Long)
-            val eventualResponse = service.allRecords(providerId) map { records =>
-              EntityResponse(RecordStats(records.length))
-            }
-            ApiResponse.completeWith(eventualResponse)
-          },
           (path("single") & parameterMap) { params =>
+            logger.debug(s"Incoming HTTP request for a single oil price record, params: $parameterMap")
             val eventualResponse = withLocalDateParam("date", params) { date =>
               service.priceAtDate(date, providerId) map {
                 case Some(price) => ApiResponse.entity(price)
@@ -77,6 +86,7 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
             ApiResponse.completeWith(eventualResponse)
           },
           (path("averageOver") & parameterMap) { params =>
+            logger.debug(s"Incoming HTTP request for a price averaged over dates, params: $parameterMap")
             val eventualResponse = withLocalDateParam("startDate", params) { startDate =>
               withLocalDateParam("endDate", params) { endDate =>
                 val dateRange = DateRange(startDate, endDate)
@@ -90,6 +100,7 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
             ApiResponse.completeWith(eventualResponse)
           },
           (path("minmax") & parameterMap) { params =>
+            logger.debug(s"Incoming HTTP request for a min-max price for the dates, params: $parameterMap")
             val eventualResponse = withLocalDateParam("startDate", params) { startDate =>
               withLocalDateParam("endDate", params) { endDate =>
                 val dateRange = DateRange(startDate, endDate)
