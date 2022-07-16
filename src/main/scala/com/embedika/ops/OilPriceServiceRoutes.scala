@@ -3,19 +3,45 @@ package com.embedika.ops
 import java.time.LocalDate
 
 import scala.concurrent.Future
+import scala.util.Properties.lineSeparator
 import scala.util.{Failure, Success, Try}
 
-import akka.http.scaladsl.model.*
-import akka.http.scaladsl.server.*
-import akka.http.scaladsl.server.Directives.*
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.generic.auto.*
-import squants.market.Money
 
 
+/** Contains actual oil price service HTTP routes. */
 trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPriceRecordJsonFormat {
   def service: OilPriceService
   implicit def cpuEc: CpuExecutionContext
+
+  private val helloMessage: String =
+    Seq(
+      "Welcome to the oil price service. Try one of the following routes:",
+      "GET /prices/:providerId/all — gets a list of provider's current oil prices.",
+      "GET /prices/:providerId/stats — gets a total count of provider's current oil prices.",
+      "GET /prices/:providerId/single?date=2020-12-31 — gets provider's oil price for the given day.",
+      "GET /prices/:providerId/averageOver?startDate=2020-12-31&endDate=2021-01-01 — " +
+        "gets provider's oil price averaged over the given date range.",
+      "GET /prices/:providerId/minmax?startDate=2020-12-31&endDate=2021-01-01 — " +
+        "gets provider's minimum and maxium prices in the given date range.",
+      s"${lineSeparator}Currently, only data.gov.ru is available as a :providerId"
+    ) mkString lineSeparator
+
+  private val pricesMessage: String = "You should specify provider in the path, eg: " +
+    "/prices/data.gov.ru/averageOver?startDate=2020-12-31&endDate=2021-01-01"
+
+  registerRoute {
+    (pathEndOrSingleSlash & get) {
+      complete(ApiResponse.ok(helloMessage).toHttpResponse)
+    }
+  }
+
+  registerRoute {
+    (path("prices") & pathEndOrSingleSlash & get) {
+      complete(ApiResponse.notFound(pricesMessage).toHttpResponse)
+    }
+  }
 
   registerRoute {
 
