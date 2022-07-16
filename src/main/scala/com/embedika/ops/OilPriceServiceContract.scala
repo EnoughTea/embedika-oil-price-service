@@ -15,10 +15,14 @@ trait OilPriceServiceContract {
     * @param providerId Provider id.
     * @return All oil price records, or empty vector if no oil price records exist for given provider.
     */
-  def allRecords(providerId: String): Future[Vector[OilPriceRecord]]
+  def allRecords(providerId: String)(implicit
+      ec: CpuExecutionContext
+  ): Future[Vector[OilPriceRecord]]
 
   /** Returns provider instance if provider with given name exists within the service; None otherwise. */
-  def getProvider(providerId: String): Future[Option[OilPriceProvider]]
+  def getProvider(providerId: String)(implicit
+      ec: CpuExecutionContext
+  ): Future[Option[OilPriceProvider]]
 
   /** Finds average oil price for the specified date range with the given oil price provider.
     *
@@ -40,7 +44,7 @@ trait OilPriceServiceContract {
     */
   def minMaxPricesInDateRange(targetRange: DateRange, providerId: String)(implicit
       ec: CpuExecutionContext
-  ): Future[Option[(Money, Money)]]
+  ): Future[Option[MinMaxPrices]]
 
   /** Finds average oil price at the specified date with the given oil price provider.
     *
@@ -52,3 +56,5 @@ trait OilPriceServiceContract {
       ec: CpuExecutionContext
   ): Future[Option[Money]]
 }
+
+final case class MinMaxPrices(min: Money, max: Money)

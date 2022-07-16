@@ -19,9 +19,13 @@ final class OilPriceService(priceCache: OilPriceCache)
     extends OilPriceServiceContract
     with OilPriceRecordSearchHelper
     with StrictLogging {
-  override def allRecords(providerId: String): Future[Vector[OilPriceRecord]] = priceCache.get(providerId)
+  override def allRecords(providerId: String)(implicit
+      ec: CpuExecutionContext
+  ): Future[Vector[OilPriceRecord]] = priceCache.get(providerId)
 
-  override def getProvider(providerId: String): Future[Option[OilPriceProvider]] = Future {
+  override def getProvider(providerId: String)(implicit
+      ec: CpuExecutionContext
+  ): Future[Option[OilPriceProvider]] = Future {
     priceCache.getProvider(providerId)
   }
 
@@ -30,7 +34,6 @@ final class OilPriceService(priceCache: OilPriceCache)
   ): Future[Option[Money]] = {
     logger.trace(s"Finding average price in range $targetRange for $providerId")
     findRecordsForDateRangeFromProvider(targetRange, providerId) map {
-      case Vector()       => None
       case Vector(single) => Some(single.price)
       case relatedRecords @ Vector(first, rest*) =>
         val startDate = first.dates.clamp(targetRange.start)
@@ -50,6 +53,7 @@ final class OilPriceService(priceCache: OilPriceCache)
             (acc._1 + (priceForPeriod * daysInPeriod.toDouble), acc._2 + daysInPeriod)
         }
         Some(sum / totalDays.toDouble)
+      case _ => None
     } map { foundPrice =>
       logger.trace(s"Found average price in range $targetRange for $providerId: $foundPrice")
       foundPrice
@@ -58,19 +62,19 @@ final class OilPriceService(priceCache: OilPriceCache)
 
   override def minMaxPricesInDateRange(targetRange: DateRange, providerId: String)(implicit
       ec: CpuExecutionContext
-  ): Future[Option[(Money, Money)]] = {
+  ): Future[Option[MinMaxPrices]] = {
     logger.trace(s"Finding min&max prices in range $targetRange for $providerId")
     findRecordsForDateRangeFromProvider(targetRange, providerId) map {
       case Vector()       => None
-      case Vector(single) => Some((single.price, single.price))
+      case Vector(single) => Some(MinMaxPrices(single.price, single.price))
       case relatedRecords =>
         val initial = (relatedRecords.head.price, relatedRecords.head.price)
         val minMax = relatedRecords.foldLeft(initial) { case ((min, max), record) =>
           (if (record.price < min) record.price else min, if (record.price > max) record.price else max)
         }
-        Some(minMax)
+        Some(MinMaxPrices(minMax._1, minMax._2))
     } map { foundPrices =>
-      logger.trace(s"Min&max prices in range $targetRange for $providerId: $foundPrices")
+      logger.trace(s"Min and max prices in range $targetRange for $providerId: $foundPrices")
       foundPrices
     }
   }

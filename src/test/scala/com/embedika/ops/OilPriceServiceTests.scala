@@ -71,7 +71,7 @@ final class OilPriceServiceTests extends UnitSpec {
       service.minMaxPricesInDateRange(DateRange.parse("2022-02-25", "2022-06-06").get, DataGovRuOilPrices.id)
 
     whenReady(fetchArbitraryMinMax) { minMax =>
-      minMax shouldEqual Some((Money(534.6, RUB), Money(697.8, RUB)))
+      minMax shouldEqual Some(MinMaxPrices(Money(534.6, RUB), Money(697.8, RUB)))
     }
   }
 
