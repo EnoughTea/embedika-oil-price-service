@@ -78,5 +78,5 @@ final class OilPriceServiceTests extends UnitSpec {
   def makePriceService(): OilPriceService = new OilPriceService(new OilPriceCache(Seq(makePriceProvider())))
 
   def makePriceProvider(): DataGovRuOilPrices =
-    new DataGovRuOilPrices(new TestHttpClient(), new TestOilPriceSource())
+    new DataGovRuOilPrices(new TestOilPriceSource())
 }

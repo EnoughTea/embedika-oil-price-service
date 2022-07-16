@@ -31,7 +31,7 @@ trait OilPriceProvider {
 
 
 /** Provides current oil prices from Data.gov.ru or, failing that, from local JAR resource. */
-final class DataGovRuOilPrices(val httpClient: HttpClient, val sources: OilPriceSource)
+final class DataGovRuOilPrices(val sources: OilPriceSource)
     extends OilPriceProvider
     with DataGovRuOilPriceCsvParser
     with StrictLogging {
