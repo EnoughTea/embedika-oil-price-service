@@ -111,6 +111,7 @@ curl --request GET \
   --url http://127.0.0.1:8045/prices/stats
 ```
 
+Пример возвращаемого JSON-массива:
 ```
 [
 	{
