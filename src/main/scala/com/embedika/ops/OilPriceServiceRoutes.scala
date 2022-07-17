@@ -77,7 +77,7 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
             ApiResponse.completeWith(eventualResponse)
           },
           (path("single") & parameterMap) { params =>
-            logger.debug(s"Processing HTTP request for a single oil price record, params: $parameterMap")
+            logger.debug(s"Processing HTTP request for a single oil price record, params: $params")
             val eventualResponse = withLocalDateParam("date", params) { date =>
               service.priceAtDate(date, providerId) map {
                 case Some(price) => ApiResponse.entity(price)
@@ -87,7 +87,7 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
             ApiResponse.completeWith(eventualResponse)
           },
           (path("averageover") & parameterMap) { params =>
-            logger.debug(s"Processing HTTP request for a price averaged over dates, params: $parameterMap")
+            logger.debug(s"Processing HTTP request for a price averaged over dates, params: $params")
             val eventualResponse = withLocalDateParam("startDate", params) { startDate =>
               withLocalDateParam("endDate", params) { endDate =>
                 val dateRange = DateRange(startDate, endDate)
@@ -101,7 +101,7 @@ trait OilPriceServiceRoutes extends Routes with FailFastCirceSupport with OilPri
             ApiResponse.completeWith(eventualResponse)
           },
           (path("minmax") & parameterMap) { params =>
-            logger.debug(s"Processing HTTP request for a min-max price for the dates, params: $parameterMap")
+            logger.debug(s"Processing HTTP request for a min-max price for the dates, params: $params")
             val eventualResponse = withLocalDateParam("startDate", params) { startDate =>
               withLocalDateParam("endDate", params) { endDate =>
                 val dateRange = DateRange(startDate, endDate)
