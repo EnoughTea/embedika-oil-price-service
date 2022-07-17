@@ -1,4 +1,6 @@
-# Oil price service
+# Oil price service &emsp; [![Build Status]][actions]
+[Build Status]: https://img.shields.io/github/workflow/status/EnoughTea/embedika-oil-price-service/CI/main
+[actions]: https://github.com/EnoughTea/embedika-oil-price-service/actions?query=branch%3Amain
 
 It's a toy project, test item #1 for [Embedika](https://embedika.ru/) company, simple microservice used to provide downloaded and parsed oil prices, nothing to see here.
 ___
