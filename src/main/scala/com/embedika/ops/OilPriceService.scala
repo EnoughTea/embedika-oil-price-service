@@ -48,7 +48,7 @@ final class OilPriceService(priceCache: OilPriceCache)
           (record.price, participatingDays)
         }
         // Now we just need to calculate (<period price> * <days in period>) / <total days in all periods>
-        val (sum, totalDays) = pricePeriods.foldLeft((Money(0, RUB), 0L)) {
+        val (sum, totalDays) = pricePeriods.foldLeft((Money(0.0, RUB), 0L)) {
           case (acc, (priceForPeriod, daysInPeriod)) =>
             (acc._1 + (priceForPeriod * daysInPeriod.toDouble), acc._2 + daysInPeriod)
         }
@@ -137,7 +137,7 @@ trait OilPriceRecordSearchHelper {
       prices: Vector[OilPriceRecord]
   ): Option[OilPriceRecordWithIndex] =
     // search() is a binary search, so its result can tell us where the targetDate is relative to overall date range:
-    prices.search(OilPriceRecord(DateRange(targetDate, targetDate), Money(0, RUB))) match {
+    prices.search(OilPriceRecord(DateRange(targetDate, targetDate), Money(0.0, RUB))) match {
       // Oil price record exists exactly for targetDate.
       case Found(foundIndex) => Some(prices(foundIndex) -> foundIndex)
       // targetDate is earlier than any record, so no record for us.
