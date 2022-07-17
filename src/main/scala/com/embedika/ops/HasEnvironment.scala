@@ -26,7 +26,7 @@ trait HasLoadedSettings {
 }
 
 
-/** Provides [[ActorSystem{T}]] */
+/** Provides [[ActorSystem]] */
 trait HasSystem[T] {
   implicit def system: ActorSystem[T]
 }

@@ -38,9 +38,8 @@ final class ScaffeineOilPriceCache(providers: Seq[OilPriceProvider], ttl: Finite
 
   private val cache: AsyncLoadingCache[String, Vector[OilPriceRecord]] =
     Scaffeine()
-      .recordStats()
       .expireAfterWrite(ttl)
-      .maximumSize(1)
+      .maximumSize(providersMap.size)
       .buildAsyncFuture(currentPricesFromProvider)
 
   override def get(providerId: String): Future[Vector[OilPriceRecord]] = cache.get(normalize(providerId))
