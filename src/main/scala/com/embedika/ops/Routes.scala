@@ -53,7 +53,7 @@ trait Routes extends Directives with RequestCache with LazyLogging {
 
   private def logFinishedRequest(result: RouteResult): Unit = {
     val logString = result match {
-      case Complete(resp) => s"HTTP request completed: ${resp.status.value} ${resp.entity.toString}"
+      case Complete(resp)       => s"HTTP request completed: ${resp.status.value} ${resp.entity.toString}"
       case Rejected(rejections) => s"HTTP request rejected: ${rejections mkString lineSeparator}"
     }
 

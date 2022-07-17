@@ -14,6 +14,6 @@ trait RequestCache {
   val keyerFunction: PartialFunction[RequestContext, Uri] = { case r: RequestContext =>
     r.request.uri
   }
-  lazy val cachingSettings: CachingSettings = CachingSettings(config)
+  lazy val cachingSettings: CachingSettings  = CachingSettings(config)
   lazy val lfuCache: Cache[Uri, RouteResult] = LfuCache(cachingSettings)
 }

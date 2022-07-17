@@ -60,6 +60,7 @@ object DateRange {
   }
 }
 
+
 /** Provides Circe JSON support for squants.Money */
 trait MoneyJsonFormat extends RubMoneyContext {
   implicit val encodeMoney: Encoder[Money] = Encoder.encodeString.contramap[Money](_.rounded(1).toString)
